@@ -4,7 +4,7 @@ let
     sha256 = "sha256:1k1rcdcjvphp989lg32kcjwdww46k0i59kf98k4f75hpgfq2j6bb";
   };
 in
-{ compiler ? "ghc961"
+{ compiler ? "ghc962"
 , nixpkgs ? import nixpkgs-src {}
 , packages ? (_: [])
 , pythonPackages ? (_: [])
