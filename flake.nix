@@ -61,12 +61,12 @@
           (devModifier devIHaskell).envFunc {withHoogle=true;};
 
       exes = rec {
-        ihaskell-ghc88  = mkExe release   ghc88;
+        # ihaskell-ghc88  = mkExe release   ghc88;
         ihaskell-ghc810 = mkExe release   ghc810;
         ihaskell-ghc90  = mkExe release90 ghc90;
         ihaskell-ghc92  = mkExe release92 ghc92;
         ihaskell-ghc94  = mkExe release94 ghc94;
-        ihaskell-ghc96  = mkExe release96 ghc96;
+        # ihaskell-ghc96  = mkExe release96 ghc96;
         ihaskell        = ihaskell-ghc810;
       };
 
