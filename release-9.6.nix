@@ -4,7 +4,7 @@ let
     sha256 = "sha256:1k1rcdcjvphp989lg32kcjwdww46k0i59kf98k4f75hpgfq2j6bb";
   };
 in
-{ compiler ? "ghc961"
+{ compiler ? "ghc962"
 , nixpkgs ? import nixpkgs-src {}
 , packages ? (_: [])
 , pythonPackages ? (_: [])
@@ -38,6 +38,16 @@ let
     });
     ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ./ghc-parser; name = "ghc-parser-src"; }) {};
     ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ./ipython-kernel; name = "ipython-kernel-src"; }) {};
+
+    ghc-syntax-highlighter = let
+      src = nixpkgs.fetchFromGitHub {
+        owner = "mrkkrp";
+        repo = "ghc-syntax-highlighter";
+        rev = "71ff751eaa6034d4aef254d6bc5a8be4f6595344";
+        sha256 = "14yahxi4pnjbvcd9r843kn7b36jsjaixd99jswsrh9n8xd59c2f1";
+      };
+      in
+        self.callCabal2nix "ghc-syntax-highlighter" src {};
 
     zeromq4-haskell = nixpkgs.haskell.lib.addPkgconfigDepend super.zeromq4-haskell nixpkgs.libsodium;
     here = nixpkgs.haskell.lib.appendPatch (nixpkgs.haskell.lib.doJailbreak super.here) (nixpkgs.fetchpatch {
