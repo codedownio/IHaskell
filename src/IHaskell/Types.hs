@@ -159,7 +159,7 @@ instance Eq Widget where
 -- expression.
 data Display = Display [DisplayData]
              | ManyDisplay [Display]
-  deriving (Show, Typeable, Generic)
+  deriving (Show, Eq, Typeable, Generic)
 
 instance ToJSON Display where
   toJSON (Display d) = object (map displayDataToJson d)
