@@ -96,6 +96,7 @@ import           IHaskell.Types
 import           IHaskell.IPython
 import           IHaskell.Eval.Parser
 import           IHaskell.Display
+import           IHaskell.Eval.Evaluate.HTML (htmlify)
 import qualified IHaskell.Eval.Hoogle as Hoogle
 import           IHaskell.Eval.Util
 import           IHaskell.BrokenPackages
@@ -929,17 +930,6 @@ evalCommand _ (Directive GetInfo str) state = safely state $ do
   write state $ "Info: " ++ str
   -- Get all the info for all the names we're given.
   strings <- unlines <$> getDescription str
-
-  -- Make pager work without html by porting to newer architecture
-  let htmlify str1 =
-        html $
-          concat
-            [ "<div style='background: rgb(247, 247, 247);'><form><textarea id='code'>"
-            , str1
-            , "</textarea></form></div>"
-            , "<script>CodeMirror.fromTextArea(document.getElementById('code'),"
-            , " {mode: 'haskell', readOnly: 'nocursor'});</script>"
-            ]
 
   return
     EvalOut
