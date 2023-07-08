@@ -27,14 +27,14 @@ ghc-options:
 
 nix:
   packages:
-    - blas
-    - cairo
-    - file
-    - gcc
-    - gfortran.cc.lib
-    - liblapack
-    - ncurses
-    - pango
-    - pkgconfig
-    - zeromq
-    - zlib
+  - blas
+  - cairo
+  - file
+  - gcc
+  - gfortran.cc.lib
+  - liblapack
+  - ncurses
+  - pango
+  - pkgconfig
+  - zeromq
+  - zlib

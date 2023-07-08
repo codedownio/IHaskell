@@ -47,6 +47,16 @@ let
 
     hlint           = super.hlint_3_5;
     zeromq4-haskell = nixpkgs.haskell.lib.addPkgconfigDepend super.zeromq4-haskell nixpkgs.libsodium;
+
+    ghc-syntax-highlighter = let
+      src = nixpkgs.fetchFromGitHub {
+        owner = "mrkkrp";
+        repo = "ghc-syntax-highlighter";
+        rev = "bbc049904524aae08e6431494f41fe2a288f6259";
+        sha256 = "sha256-w7AxGsUfqGhh7wrSPppQ2+gPwjvb4mwExJdDOcasAZ4=";
+      };
+      in
+        self.callCabal2nix "ghc-syntax-highlighter" src {};
   } // displays self);
 
   # statically linking against haskell libs reduces closure size at the expense
