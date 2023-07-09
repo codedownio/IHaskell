@@ -2,8 +2,6 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
     paths-ignore:
       - 'demo/**'
       - 'docker/**'
@@ -15,7 +13,6 @@ on:
       - 'notebooks/**'
       - 'README.md'
       - 'hie.yaml'
-      - '*.nix'
   pull_request:
     paths-ignore:
       - 'demo/**'
@@ -28,7 +25,6 @@ on:
       - 'notebooks/**'
       - 'README.md'
       - 'hie.yaml'
-      - '*.nix'
 
 jobs:
   linux:
