@@ -105,6 +105,7 @@ library
                    IHaskell.Eval.Completion
                    IHaskell.Eval.Inspect
                    IHaskell.Eval.Evaluate
+                   IHaskell.Eval.Evaluate.HTML
                    IHaskell.Eval.Info
                    IHaskell.Eval.Parser
                    IHaskell.Eval.Hoogle
