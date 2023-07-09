@@ -1,4 +1,4 @@
-resolver: lts-12.26
+resolver: nightly-2023-07-07 # GHC 9.6.2
 
 flags: {}
 packages:
@@ -10,24 +10,32 @@ packages:
 - ./ihaskell-display/ihaskell-charts
 - ./ihaskell-display/ihaskell-diagrams
 - ./ihaskell-display/ihaskell-gnuplot
+- ./ihaskell-display/ihaskell-graphviz
 - ./ihaskell-display/ihaskell-hatex
 - ./ihaskell-display/ihaskell-juicypixels
 - ./ihaskell-display/ihaskell-magic
 - ./ihaskell-display/ihaskell-plot
-- ./ihaskell-display/ihaskell-static-canvas
+# - ./ihaskell-display/ihaskell-static-canvas
 - ./ihaskell-display/ihaskell-widgets
-
-extra-deps:
-- magic-1.1
-- Chart-1.9
-- Chart-cairo-1.9
-- plot-0.2.3.9
 
 ghc-options:
   # Eventually we want "$locals": -Wall -Wpartial-fields -Werror
-  ghc-parser: -Wall -Wpartial-fields -Werror
-  ihaskell: -Wall -Wpartial-fields -Werror
-  ihaskell-widgets: -Wall -Wpartial-fields -Werror
+  # ghc-parser: -Wall -Wpartial-fields -Werror
+  # ihaskell: -Wall -Wpartial-fields -Werror
+  # ihaskell-widgets: -Wall -Wpartial-fields -Werror
+
+extra-deps:
+- here-1.2.13
+- Chart-1.9.4
+- Chart-cairo-1.9.3
+- diagrams-1.4.0.1
+- diagrams-cairo-1.4.2
+- diagrams-contrib-1.4.5
+- cubicbezier-0.6.0.6
+- mfsolve-0.3.2.1
+- plot-0.2.3.11
+
+allow-newer: true
 
 nix:
   enable: false
