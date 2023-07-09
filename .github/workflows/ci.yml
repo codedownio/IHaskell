@@ -46,7 +46,8 @@ jobs:
           - stack-yaml: 'stack.yaml'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
       - name: Cache .stack
         uses: actions/cache@v2.1.6
         with:
@@ -54,25 +55,31 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.versions.stack-yaml }}-${{ hashFiles(format('./{0}', matrix.versions.stack-yaml)) }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.versions.stack-yaml }}
+
       - name: Update system dependencies
         run: |
           sudo apt update
+
       - name: Install system dependencies
         run: |
           sudo apt install libmagic-dev libgmp-dev libblas-dev liblapack-dev libcairo2-dev libpango1.0-dev libzmq3-dev jq
+
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
           python-version: '3.8'
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+
       - name: Install Stack
         run: |
           export PATH=$HOME/.local/bin:$PATH
           mkdir -p ~/.local/bin
           curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
       - name: Build dependencies
         run: |
           # Used to avoid 'source and destination file are the same' error
@@ -85,11 +92,13 @@ jobs:
           stack install gtk2hs-buildtools
           stack build hmatrix
           stack build --dependencies-only
+
       - name: Run Haskell tests
         run: |
           set -e
           stack build ipython-kernel --flag ipython-kernel:examples
           stack test ihaskell --no-terminal
+
       - name: Run integration test
         # The test is flaky on GHC 8.0 so we don't run it. As long as the tests
         # above pass, it's unlikely that we'll introduce a bug that we will
