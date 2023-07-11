@@ -47,7 +47,7 @@ becomes string expected = evaluationComparing comparison string
     comparison (results, _pageOut) = do
       when (length results /= length expected) $
         expectationFailure $ "Expected result to have " ++ show (length expected)
-                                                           ++ " results. Got " ++ show results
+                                                        ++ " results. Got " ++ show results
 
       forM_ (zip results expected) $ \(ManyDisplay [Display result], expect) -> case extractPlain result of
         ""  -> expectationFailure $ "No plain-text output in " ++ show result ++ "\nExpected: " ++ expect
@@ -111,8 +111,10 @@ testEval =
           x+z
       |] `becomes` ["21"]
 
-    it "evaluates flags" $ do
+    it "evaluates :set -package" $ do
       ":set -package hello" `becomes` ["Warning: -package not supported yet"]
+
+    it "evaluates :set -XNoImplicitPrelude" $ do
       ":set -XNoImplicitPrelude" `becomes` []
 
     it "evaluates multiline expressions" $ do
