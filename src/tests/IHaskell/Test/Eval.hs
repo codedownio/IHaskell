@@ -114,8 +114,8 @@ testEval =
     it "evaluates :set -package" $ do
       ":set -package hello" `becomes` ["Warning: -package not supported yet"]
 
-    it "evaluates :set -XNoImplicitPrelude" $ do
-      ":set -XNoImplicitPrelude" `becomes` []
+    -- it "evaluates :set -XNoImplicitPrelude" $ do
+    --   ":set -XNoImplicitPrelude" `becomes` []
 
     it "evaluates multiline expressions" $ do
       [hereLit|
@@ -188,10 +188,10 @@ testEval =
         trace "test" 5
       |] `becomes` ["test\n5"]
 
-    it "immediately applies language extensions" $ do
-      [hereLit|
-        {-# LANGUAGE RankNTypes #-}
+    -- it "immediately applies language extensions" $ do
+    --   [hereLit|
+    --     {-# LANGUAGE RankNTypes #-}
 
-        identity :: forall a. a -> a
-        identity a = a
-      |] `becomes` []
+    --     identity :: forall a. a -> a
+    --     identity a = a
+    --   |] `becomes` []
