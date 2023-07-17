@@ -33,7 +33,6 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-          - stack-yaml: 'stack-8.0.yaml'
           - stack-yaml: 'stack-8.2.yaml'
           - stack-yaml: 'stack-8.4.yaml'
           - stack-yaml: 'stack-8.6.yaml'
@@ -100,11 +99,6 @@ jobs:
           stack test ihaskell --no-terminal
 
       - name: Run integration test
-        # The test is flaky on GHC 8.0 so we don't run it. As long as the tests
-        # above pass, it's unlikely that we'll introduce a bug that we will
-        # only catch through the integration test on this version and not other
-        # versions.
-        if: ${{ matrix.versions.stack-yaml != 'stack-8.0.yaml' }}
         run: |
           set -e
           stack build --no-terminal
