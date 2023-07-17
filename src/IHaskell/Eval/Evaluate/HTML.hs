@@ -3,6 +3,7 @@
 module IHaskell.Eval.Evaluate.HTML (htmlify) where
 
 import           Data.Function ((&))
+import qualified Data.List as L
 import           Data.Maybe
 import           Data.Text as T hiding (concat)
 import           GHC.SyntaxHighlighter (tokenizeHaskell)
@@ -15,13 +16,22 @@ htmlify :: String -> DisplayData
 htmlify str1 = html $ T.unpack ("<div class=\"code cm-s-jupyter\">" <> spans <> "</div>")
   where
     spans :: Text
-    spans = T.intercalate "\n" ["<span class=\"" <> tokenToClassName token <> "\">" <> escapeHtml text <> "</span>"
-                               | (token, text) <- tokensAndTexts]
+    spans = T.intercalate "\n" (fmap renderLine (getLines tokensAndTexts))
+
+    renderLine xs = mconcat ["<span class=\"" <> tokenToClassName token <> "\">" <> escapeHtml text <> "</span>"
+                            | (token, text) <- xs]
 
     tokensAndTexts = fromMaybe [] (tokenizeHaskell (T.pack str1))
 
     escapeHtml text = text
                     & T.replace "\n" "<br />"
+
+    getLines :: [(SH.Token, Text)] -> [[(SH.Token, Text)]]
+    getLines [] = []
+    getLines xs = (curLine <> [spaceBoundary]) : getLines (L.tail rest)
+      where (curLine, rest) = L.span (/= spaceBoundary) xs
+
+    spaceBoundary = (SH.SpaceTok, "\n")
 
 tokenToClassName :: SH.Token -> Text
 tokenToClassName SH.KeywordTok     = "cm-keyword"
