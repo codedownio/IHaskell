@@ -934,9 +934,9 @@ evalCommand _ (Directive GetInfo str) state = safely state $ do
   return
     EvalOut
       { evalStatus = Success
-      , evalResult = mempty
+      , evalResult = Display [plain strings, htmlify strings]
       , evalState = state
-      , evalPager = [plain strings, htmlify strings]
+      , evalPager = []
       , evalMsgs = []
       }
 
