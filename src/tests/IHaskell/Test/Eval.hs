@@ -1,5 +1,7 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module IHaskell.Test.Eval (testEval) where
 
 import           Prelude
@@ -17,8 +19,8 @@ import           Test.Hspec
 
 import           IHaskell.Test.Util (strip)
 import           IHaskell.Eval.Evaluate (interpret, evaluate)
-import           IHaskell.Types (EvaluationResult(..), defaultKernelState, KernelState(..),
-                                 LintStatus(..), Display(..), extractPlain)
+import           IHaskell.Types (Display(..), DisplayData(..), EvaluationResult(..), KernelState(..),
+                                 LintStatus(..), MimeType(..), defaultKernelState, extractPlain)
 
 eval :: String -> IO ([Display], String)
 eval string = do
@@ -162,7 +164,7 @@ testEval =
     it "prints multiline output correctly" $ do
       ":! printf \"hello\\nworld\"" `becomes` ["hello\nworld"]
 
-    it "evaluates directives" $ do
+    it "evaluates :typ directive" $ do
 #if MIN_VERSION_ghc(9,2,0)
       -- It's `a` instead of `p`
       ":typ 3" `becomes` ["3 :: forall {a}. Num a => a"]
@@ -175,11 +177,20 @@ testEval =
 #else
       ":typ 3" `becomes` ["3 :: forall t. Num t => t"]
 #endif
+
+    it "evaluates :k directive" $ do
       ":k Maybe" `becomes` ["Maybe :: * -> *"]
+
+    it "evaluates :in directive" $ do
 #if MIN_VERSION_ghc(8,10,0)
-      ":in String" `pages` ["type String :: *\ntype String = [Char]\n  \t-- Defined in \8216GHC.Base\8217"]
+      (displays, output) <- eval ":in String"
+      displays `shouldBe` [ManyDisplay [Display [
+                                           DisplayData PlainText "type String :: *\ntype String = [Char]\n  \t-- Defined in \8216GHC.Base\8217"
+                                           , DisplayData MimeHtml "<div class=\"code cm-s-jupyter\"><span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">::</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">*</span><span class=\"cm-space\"><br /></span>\n<span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">=</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">[</span><span class=\"cm-variable-2\">Char</span><span class=\"cm-atom\">]</span><span class=\"cm-space\"><br />  \t</span><span class=\"cm-comment\">-- Defined in \8216GHC.Base\8217</span><span class=\"cm-space\"><br /></span></div>"
+                                           ]]]
+
 #else
-      ":in String" `pages` ["type String = [Char] \t-- Defined in \8216GHC.Base\8217"]
+      ":in String" `becomes` []
 #endif
 
     it "captures stderr" $ do
