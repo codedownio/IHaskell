@@ -15,11 +15,11 @@
       compilerVersionFromHsPkgs = hsPkgs:
         pkgs.lib.replaceStrings [ "." ] [ "" ] hsPkgs.ghc.version;
 
-      release = import ./release.nix;
-      release90 = import ./release-9.0.nix;
-      release92 = import ./release-9.2.nix;
-      release94 = import ./release-9.4.nix;
-      release96 = import ./release-9.6.nix;
+      release = import ./nix/release.nix;
+      release90 = import ./nix/release-9.0.nix;
+      release92 = import ./nix/release-9.2.nix;
+      release94 = import ./nix/release-9.4.nix;
+      release96 = import ./nix/release-9.6.nix;
 
       mkEnv = releaseFn: hsPkgs: displayPkgs:
         releaseFn {
