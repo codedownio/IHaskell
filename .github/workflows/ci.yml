@@ -33,15 +33,15 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-          - stack-yaml: 'stack-8.2.yaml'
-          - stack-yaml: 'stack-8.4.yaml'
-          - stack-yaml: 'stack-8.6.yaml'
-          - stack-yaml: 'stack-8.8.yaml'
-          - stack-yaml: 'stack-8.10.yaml'
-          - stack-yaml: 'stack-9.0.yaml'
-          - stack-yaml: 'stack-9.2.yaml'
-          - stack-yaml: 'stack-9.4.yaml'
-          - stack-yaml: 'stack-9.6.yaml'
+          - stack-yaml: 'stack/stack-8.2.yaml'
+          - stack-yaml: 'stack/stack-8.4.yaml'
+          - stack-yaml: 'stack/stack-8.6.yaml'
+          - stack-yaml: 'stack/stack-8.8.yaml'
+          - stack-yaml: 'stack/stack-8.10.yaml'
+          - stack-yaml: 'stack/stack-9.0.yaml'
+          - stack-yaml: 'stack/stack-9.2.yaml'
+          - stack-yaml: 'stack/stack-9.4.yaml'
+          - stack-yaml: 'stack/stack-9.6.yaml'
           - stack-yaml: 'stack.yaml'
 
     steps:
@@ -84,6 +84,9 @@ jobs:
           # Used to avoid 'source and destination file are the same' error
           mv ${{ matrix.versions.stack-yaml }} intermediate-stack.yaml
           mv intermediate-stack.yaml stack.yaml
+
+          mv ${{ matrix.versions.stack-yaml }}.lock intermediate-stack.yaml.lock
+          mv intermediate-stack.yaml.lock stack.yaml.lock
 
           echo "apply-ghc-options: everything" >> stack.yaml
 

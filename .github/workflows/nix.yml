@@ -33,11 +33,11 @@ jobs:
     strategy:
       matrix:
         versions:
-        - release: 'release-9.0.nix'
-        - release: 'release-9.2.nix'
-        - release: 'release-9.4.nix'
-        - release: 'release-9.6.nix'
-        - release: 'release-9.8.nix'
+        - release: 'nix/release-9.0.nix'
+        - release: 'nix/release-9.2.nix'
+        - release: 'nix/release-9.4.nix'
+        - release: 'nix/release-9.6.nix'
+        - release: 'nix/release-9.8.nix'
 
     steps:
     - uses: actions/checkout@v3
