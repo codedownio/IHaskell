@@ -33,10 +33,10 @@ jobs:
     strategy:
       matrix:
         versions:
-        - release: 'release-9.0.nix'
-        - release: 'release-9.2.nix'
-        - release: 'release-9.4.nix'
-        - release: 'release-9.6.nix'
+        - release: 'nix/release-9.0.nix'
+        - release: 'nix/release-9.2.nix'
+        - release: 'nix/release-9.4.nix'
+        - release: 'nix/release-9.6.nix'
 
     steps:
     - uses: actions/checkout@v3
@@ -56,7 +56,7 @@ jobs:
           ${{ matrix.versions.release }} \
           --arg packages "haskellPackages: [ haskellPackages.ihaskell ]"
 
-    - if: matrix.versions.release != 'release-9.6.nix'
+    - if: matrix.versions.release != 'nix/release-9.6.nix'
       run: |
         nix-shell \
           -I nixpkgs=https://github.com/NixOS/nixpkgs/tarball/nixos-22.11 \
