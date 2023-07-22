@@ -13,8 +13,10 @@ import           IHaskell.IPython.Types (DisplayData)
 
 
 htmlify :: Maybe Text -> Text -> String -> DisplayData
-htmlify wrapClass classPrefix str1 = html $ T.unpack ("<div class=\"" <> T.intercalate " " classNames <> "\">" <> spans <> "</div>")
+htmlify wrapClass classPrefix str1 = html Nothing outerDiv
   where
+    outerDiv = T.unpack ("<div class=\"" <> T.intercalate " " classNames <> "\">" <> spans <> "</div>")
+
     classNames = "code" : catMaybes [wrapClass]
 
     spans :: Text
