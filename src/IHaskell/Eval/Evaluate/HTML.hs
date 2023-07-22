@@ -12,13 +12,15 @@ import           IHaskell.Display (html)
 import           IHaskell.IPython.Types (DisplayData)
 
 
-htmlify :: String -> DisplayData
-htmlify str1 = html $ T.unpack ("<div class=\"code cm-s-jupyter\">" <> spans <> "</div>")
+htmlify :: Maybe Text -> Text -> String -> DisplayData
+htmlify wrapClass classPrefix str1 = html $ T.unpack ("<div class=\"" <> T.intercalate " " classNames <> "\">" <> spans <> "</div>")
   where
+    classNames = "code" : catMaybes [wrapClass]
+
     spans :: Text
     spans = T.intercalate "\n" (fmap renderLine (getLines tokensAndTexts))
 
-    renderLine xs = mconcat ["<span class=\"" <> tokenToClassName token <> "\">" <> escapeHtml text <> "</span>"
+    renderLine xs = mconcat ["<span class=\"" <> classPrefix <> tokenToClassName token <> "\">" <> escapeHtml text <> "</span>"
                             | (token, text) <- xs]
 
     tokensAndTexts = fromMaybe [] (tokenizeHaskell (T.pack str1))
@@ -34,16 +36,16 @@ htmlify str1 = html $ T.unpack ("<div class=\"code cm-s-jupyter\">" <> spans <> 
     spaceBoundary = (SH.SpaceTok, "\n")
 
 tokenToClassName :: SH.Token -> Text
-tokenToClassName SH.KeywordTok     = "cm-keyword"
-tokenToClassName SH.PragmaTok      = "cm-meta"
-tokenToClassName SH.SymbolTok      = "cm-atom"
-tokenToClassName SH.VariableTok    = "cm-variable"
-tokenToClassName SH.ConstructorTok = "cm-variable-2"
-tokenToClassName SH.OperatorTok    = "cm-operator"
-tokenToClassName SH.CharTok        = "cm-char"
-tokenToClassName SH.StringTok      = "cm-string"
-tokenToClassName SH.IntegerTok     = "cm-number"
-tokenToClassName SH.RationalTok    = "cm-number"
-tokenToClassName SH.CommentTok     = "cm-comment"
-tokenToClassName SH.SpaceTok       = "cm-space"
-tokenToClassName SH.OtherTok       = "cm-builtin"
+tokenToClassName SH.KeywordTok     = "keyword"
+tokenToClassName SH.PragmaTok      = "meta"
+tokenToClassName SH.SymbolTok      = "atom"
+tokenToClassName SH.VariableTok    = "variable"
+tokenToClassName SH.ConstructorTok = "variable-2"
+tokenToClassName SH.OperatorTok    = "operator"
+tokenToClassName SH.CharTok        = "char"
+tokenToClassName SH.StringTok      = "string"
+tokenToClassName SH.IntegerTok     = "number"
+tokenToClassName SH.RationalTok    = "number"
+tokenToClassName SH.CommentTok     = "comment"
+tokenToClassName SH.SpaceTok       = "space"
+tokenToClassName SH.OtherTok       = "builtin"

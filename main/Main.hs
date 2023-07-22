@@ -5,9 +5,9 @@
 --                 Chans to communicate with the ZeroMQ sockets.
 module Main (main) where
 
-import           IHaskellPrelude
-import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text as T
+import           IHaskellPrelude
 
 -- Standard library imports.
 import           Control.Concurrent.Chan
@@ -97,6 +97,10 @@ parseKernelArgs = foldl' addFlag defaultKernelSpecOptions
       kernelSpecOpts { kernelSpecDebug = True }
     addFlag kernelSpecOpts (CodeMirror codemirror) =
       kernelSpecOpts { kernelSpecCodeMirror = codemirror }
+    addFlag kernelSpecOpts (HtmlCodeWrapperClass clazz) =
+      kernelSpecOpts { kernelSpecHtmlCodeWrapperClass = Just clazz }
+    addFlag kernelSpecOpts (HtmlCodeTokenPrefix prefix) =
+      kernelSpecOpts { kernelSpecHtmlCodeTokenPrefix = prefix }
     addFlag kernelSpecOpts (GhcLibDir libdir) =
       kernelSpecOpts { kernelSpecGhcLibdir = libdir }
     addFlag kernelSpecOpts (KernelName name) =
@@ -171,7 +175,7 @@ runKernel kOpts profileSrc = do
           -- Create a new state each time.
           stateVar <- liftIO initialKernelState
           st <- liftIO $ takeMVar stateVar
-          evaluate st line noPublish noWidget
+          evaluate kOpts st line noPublish noWidget
 
     confFile <- liftIO $ kernelSpecConfFile kOpts
     case confFile of
@@ -289,7 +293,7 @@ replyTo _ interface ShutdownRequest { restartPending = pending } replyHeader _ =
 
 -- Reply to an execution request. The reply itself does not require computation, but this causes
 -- messages to be sent to the IOPub socket with the output of the code in the execution request.
-replyTo _ interface req@ExecuteRequest { getCode = code } replyHeader state = do
+replyTo kOpts interface req@ExecuteRequest { getCode = code } replyHeader state = do
   -- Convenience function to send a message to the IOPub socket.
   let send msg = liftIO $ writeChan (iopubChannel interface) msg
 
@@ -313,7 +317,7 @@ replyTo _ interface req@ExecuteRequest { getCode = code } replyHeader state = do
   -- Run code and publish to the frontend as we go.
   let widgetMessageHandler = widgetHandler send replyHeader
       publish = publishResult send replyHeader displayed updateNeeded pOut (usePager state)
-  (updatedState, errorOccurred) <- evaluate state (T.unpack code) publish widgetMessageHandler
+  (updatedState, errorOccurred) <- evaluate kOpts state (T.unpack code) publish widgetMessageHandler
   let executeReplyStatus = case errorOccurred of
         Success -> Ok
         Failure -> Err

@@ -27,6 +27,7 @@ import qualified Data.Set as Set
 import           Data.Char as Char
 import           Data.Dynamic
 import qualified Data.Binary as Binary
+import qualified Data.Text as Text
 import           System.Directory
 import           System.Posix.IO (fdToHandle)
 import           System.IO (hGetChar, hSetEncoding, utf8)
@@ -193,7 +194,7 @@ testInterpret v = interpret GHC.Paths.libdir False False (const v)
 -- | Evaluation function for testing.
 testEvaluate :: String -> IO ()
 testEvaluate str = void $ testInterpret $
-  evaluate defaultKernelState str (\_ _ -> return ()) (\state _ -> return state)
+  evaluate defaultKernelSpecOptions defaultKernelState str (\_ _ -> return ()) (\state _ -> return state)
 
 -- | Run an interpreting action. This is effectively runGhc with initialization
 -- and importing. The `allowedStdin` argument indicates whether `stdin` is
@@ -424,12 +425,13 @@ cleanString istr = if allBrackets
     removeBracket other = error $ "Expected bracket as first char, but got string: " ++ other
 
 -- | Evaluate some IPython input code.
-evaluate :: KernelState                  -- ^ The kernel state.
+evaluate :: KernelSpecOptions            -- ^ Options from kernel startup.
+         -> KernelState                  -- ^ The kernel state.
          -> String                       -- ^ Haskell code or other interpreter commands.
          -> Publisher                    -- ^ Function used to publish data outputs.
          -> (KernelState -> [WidgetMsg] -> IO KernelState) -- ^ Function to handle widget messages
          -> Interpreter (KernelState, ErrorOccurred)
-evaluate kernelState code output widgetHandler = do
+evaluate kOpts kernelState code output widgetHandler = do
   cmds <- parseString (cleanString code)
   let execCount = getExecutionCounter kernelState
 
@@ -453,7 +455,7 @@ evaluate kernelState code output widgetHandler = do
                -- Print all parse errors.
                _ -> do
                  forM_ errs $ \err -> do
-                   out <- evalCommand output err kernelState
+                   out <- evalCommand output err kOpts kernelState
                    liftIO $ output
                      (FinalResult (evalResult out) [] [])
                      (evalStatus out)
@@ -468,7 +470,7 @@ evaluate kernelState code output widgetHandler = do
     runUntilFailure :: KernelState -> [CodeBlock] -> Interpreter (KernelState, ErrorOccurred)
     runUntilFailure state [] = return (state, Success)
     runUntilFailure state (cmd:rest) = do
-      evalOut <- evalCommand output cmd state
+      evalOut <- evalCommand output cmd kOpts state
 
       -- Get displayed channel outputs. Merge them with normal display outputs.
       dispsMay <- if supportLibrariesAvailable state
@@ -614,13 +616,13 @@ wrapExecution state exec = safely state $
         }
 
 -- | Return the display data for this command, as well as whether it resulted in an error.
-evalCommand :: Publisher -> CodeBlock -> KernelState -> Interpreter EvalOut
-evalCommand _ (Import importStr) state = wrapExecution state $ do
+evalCommand :: Publisher -> CodeBlock -> KernelSpecOptions -> KernelState -> Interpreter EvalOut
+evalCommand _ (Import importStr) _ state = wrapExecution state $ do
   write state $ "Import: " ++ importStr
   evalImport importStr
   return mempty
 
-evalCommand _ (Module contents) state = wrapExecution state $ do
+evalCommand _ (Module contents) _ state = wrapExecution state $ do
   write state $ "Module:\n" ++ contents
 
   -- Write the module contents to a temporary file in our work directory
@@ -665,7 +667,7 @@ evalCommand _ (Module contents) state = wrapExecution state $ do
     Nothing -> doLoadModule modName modName
 
 -- | Directives set via `:set`.
-evalCommand _output (Directive SetDynFlag flagsStr) state = safely state $ do
+evalCommand _output (Directive SetDynFlag flagsStr) _ state = safely state $ do
   write state $ "All Flags: " ++ flagsStr
 
   -- Find which flags are IHaskell flags, and which are GHC flags
@@ -728,12 +730,12 @@ evalCommand _output (Directive SetDynFlag flagsStr) state = safely state $ do
           , evalMsgs = []
           }
 
-evalCommand output (Directive SetExtension opts) state = do
+evalCommand output (Directive SetExtension opts) kOpts state = do
   write state $ "Extension: " ++ opts
   let set = concatMap (" -X" ++) $ words opts
-  evalCommand output (Directive SetDynFlag set) state
+  evalCommand output (Directive SetDynFlag set) kOpts state
 
-evalCommand _output (Directive LoadModule mods) state = wrapExecution state $ do
+evalCommand _output (Directive LoadModule mods) _ state = wrapExecution state $ do
   write state $ "Load Module: " ++ mods
   let stripped@(firstChar:remainder) = mods
       (modules, removeModule) =
@@ -748,7 +750,7 @@ evalCommand _output (Directive LoadModule mods) state = wrapExecution state $ do
 
   return mempty
 
-evalCommand _output (Directive SetOption opts) state = do
+evalCommand _output (Directive SetOption opts) _ state = do
   write state $ "Option: " ++ opts
   let nonExisting = filter (not . optionExists) $ words opts
   if not $ null nonExisting
@@ -777,18 +779,18 @@ evalCommand _output (Directive SetOption opts) state = do
     findOption opt =
       find (elem opt . getOptionName) kernelOpts
 
-evalCommand _ (Directive GetType expr) state = wrapExecution state $ do
+evalCommand _ (Directive GetType expr) _ state = wrapExecution state $ do
   write state $ "Type: " ++ expr
   formatType <$> ((expr ++ " :: ") ++) <$> getType expr
 
-evalCommand _ (Directive GetKind expr) state = wrapExecution state $ do
+evalCommand _ (Directive GetKind expr) _ state = wrapExecution state $ do
   write state $ "Kind: " ++ expr
   (_, kind) <- GHC.typeKind False expr
   flags <- getSessionDynFlags
   let typeStr = showSDocUnqual flags $ ppr kind
   return $ formatType $ expr ++ " :: " ++ typeStr
 
-evalCommand _ (Directive GetKindBang expr) state = wrapExecution state $ do
+evalCommand _ (Directive GetKindBang expr) _ state = wrapExecution state $ do
   write state $ "Kind!: " ++ expr
   (typ, kind) <- GHC.typeKind True expr
   flags <- getSessionDynFlags
@@ -797,7 +799,7 @@ evalCommand _ (Directive GetKindBang expr) state = wrapExecution state $ do
   let finalStr = showSDocUnqual flags $ vcat [kindStr, typeStr]
   return $ formatType finalStr
 
-evalCommand _ (Directive LoadFile names) state = wrapExecution state $ do
+evalCommand _ (Directive LoadFile names) _ state = wrapExecution state $ do
   write state $ "Load: " ++ names
 
   displays <- forM (words names) $ \name -> do
@@ -809,9 +811,9 @@ evalCommand _ (Directive LoadFile names) state = wrapExecution state $ do
                 doLoadModule filename modName
   return (ManyDisplay displays)
 
-evalCommand _ (Directive Reload _) state = wrapExecution state doReload
+evalCommand _ (Directive Reload _) _ state = wrapExecution state doReload
 
-evalCommand publish (Directive ShellCmd cmd) state = wrapExecution state $
+evalCommand publish (Directive ShellCmd cmd) _ state = wrapExecution state $
   -- Assume the first character of 'cmd' is '!'.
   case words $ drop 1 cmd of
     "cd":dirs -> do
@@ -889,7 +891,7 @@ evalCommand publish (Directive ShellCmd cmd) state = wrapExecution state $
 
       loop
 -- This is taken largely from GHCi's info section in InteractiveUI.
-evalCommand _ (Directive GetHelp _) state = do
+evalCommand _ (Directive GetHelp _) _ state = do
   write state "Help via :help or :?."
   return
     EvalOut
@@ -926,7 +928,7 @@ evalCommand _ (Directive GetHelp _) state = do
                     ]
 
 -- This is taken largely from GHCi's info section in InteractiveUI.
-evalCommand _ (Directive GetInfo str) state = safely state $ do
+evalCommand _ (Directive GetInfo str) kOpts state = safely state $ do
   write state $ "Info: " ++ str
   -- Get all the info for all the names we're given.
   strings <- unlines <$> getDescription str
@@ -934,21 +936,26 @@ evalCommand _ (Directive GetInfo str) state = safely state $ do
   return
     EvalOut
       { evalStatus = Success
-      , evalResult = Display [plain strings, htmlify strings]
+      , evalResult = Display [
+          plain strings
+          , htmlify (Text.pack <$> kernelSpecHtmlCodeWrapperClass kOpts)
+                    (Text.pack $ kernelSpecHtmlCodeTokenPrefix kOpts)
+                    strings
+          ]
       , evalState = state
       , evalPager = []
       , evalMsgs = []
       }
 
-evalCommand _ (Directive SearchHoogle query) state = safely state $ do
+evalCommand _ (Directive SearchHoogle query) _ state = safely state $ do
   results <- liftIO $ Hoogle.search query
   return $ hoogleResults state results
 
-evalCommand _ (Directive GetDoc query) state = safely state $ do
+evalCommand _ (Directive GetDoc query) _ state = safely state $ do
   results <- liftIO $ Hoogle.document query
   return $ hoogleResults state results
 
-evalCommand _ (Directive SPrint binding) state = wrapExecution state $ do
+evalCommand _ (Directive SPrint binding) _ state = wrapExecution state $ do
   flags <- getSessionDynFlags
   contents <- liftIO $ newIORef []
 #if MIN_VERSION_ghc(9,4,0)
@@ -972,10 +979,10 @@ evalCommand _ (Directive SPrint binding) state = wrapExecution state $ do
   sprint <- liftIO $ readIORef contents
   return $ formatType (unlines sprint)
 
-evalCommand output (Statement stmt) state = wrapExecution state $ evalStatementOrIO output state
-                                                                    (CapturedStmt stmt)
+evalCommand output (Statement stmt) _ state = wrapExecution state $
+  evalStatementOrIO output state (CapturedStmt stmt)
 
-evalCommand output (Expression expr) state = do
+evalCommand output (Expression expr) kOpts state = do
   write state $ "Expression:\n" ++ expr
 
   -- Try to use `display` to convert our type into the output Dislay If typechecking fails and there
@@ -1031,7 +1038,7 @@ evalCommand output (Expression expr) state = do
            else do
              -- Evaluate this expression as though it's just a statement. The output is bound to 'it', so we can
              -- then use it.
-             evalOut <- evalCommand output (Statement expr) state
+             evalOut <- evalCommand output (Statement expr) kOpts state
 
              let out = evalResult evalOut
                  showErr = isShowError out
@@ -1078,7 +1085,7 @@ evalCommand output (Expression expr) state = do
       let stmtTemplate = if io
                            then "it <- (%s)"
                            else "let { it = %s }"
-      evalOut <- evalCommand output (Statement $ printf stmtTemplate expr) state
+      evalOut <- evalCommand output (Statement $ printf stmtTemplate expr) kOpts state
       case evalStatus evalOut of
         Failure -> return evalOut
         Success -> wrapExecution state $ do
@@ -1138,7 +1145,7 @@ evalCommand output (Expression expr) state = do
                      else after
 
 
-evalCommand _ (Declaration decl) state = wrapExecution state $ do
+evalCommand _ (Declaration decl) _ state = wrapExecution state $ do
   write state $ "Declaration:\n" ++ decl
   boundNames <- evalDeclarations decl
   let nonDataNames = filter (not . isUpper . head) boundNames
@@ -1159,12 +1166,12 @@ evalCommand _ (Declaration decl) state = wrapExecution state $ do
 
       return $ Display [html $ unlines $ map formatGetType types]
 
-evalCommand _ (TypeSignature sig) state = wrapExecution state $
+evalCommand _ (TypeSignature sig) _ state = wrapExecution state $
   -- We purposefully treat this as a "success" because that way execution continues. Empty type
   -- signatures are likely due to a parse error later on, and we want that to be displayed.
   return $ displayError $ "The type signature " ++ sig ++ "\nlacks an accompanying binding."
 
-evalCommand _ (ParseError loc err) state = do
+evalCommand _ (ParseError loc err) _ state = do
   write state "Parse Error."
   return
     EvalOut
@@ -1175,12 +1182,12 @@ evalCommand _ (ParseError loc err) state = do
       , evalMsgs = []
       }
 
-evalCommand _ (Pragma (PragmaUnsupported pragmaType) _pragmas) state = wrapExecution state $
+evalCommand _ (Pragma (PragmaUnsupported pragmaType) _pragmas) _ state = wrapExecution state $
   return $ displayError $ "Pragmas of type " ++ pragmaType ++ "\nare not supported."
 
-evalCommand output (Pragma PragmaLanguage pragmas) state = do
+evalCommand output (Pragma PragmaLanguage pragmas) kOpts state = do
   write state $ "Got LANGUAGE pragma " ++ show pragmas
-  evalCommand output (Directive SetExtension $ unwords pragmas) state
+  evalCommand output (Directive SetExtension $ unwords pragmas) kOpts state
 
 hoogleResults :: KernelState -> [Hoogle.HoogleResult] -> EvalOut
 hoogleResults state results =

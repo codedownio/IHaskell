@@ -17,8 +17,9 @@ import qualified GHC.Paths
 
 import           Test.Hspec
 
-import           IHaskell.Test.Util (strip)
 import           IHaskell.Eval.Evaluate (interpret, evaluate)
+import           IHaskell.IPython (defaultKernelSpecOptions)
+import           IHaskell.Test.Util (strip)
 import           IHaskell.Types (Display(..), DisplayData(..), EvaluationResult(..), KernelState(..),
                                  LintStatus(..), MimeType(..), defaultKernelState, extractPlain)
 
@@ -37,7 +38,7 @@ eval string = do
   getTemporaryDirectory >>= setCurrentDirectory
   let state = defaultKernelState { getLintStatus = LintOff }
   _ <- interpret GHC.Paths.libdir False False $ const $
-        IHaskell.Eval.Evaluate.evaluate state string publish noWidgetHandling
+        IHaskell.Eval.Evaluate.evaluate defaultKernelSpecOptions state string publish noWidgetHandling
   out <- readIORef outputAccum
   pagerout <- readIORef pagerAccum
   return (reverse out, unlines . map extractPlain . reverse $ pagerout)
