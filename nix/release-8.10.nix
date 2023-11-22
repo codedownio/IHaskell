@@ -1,4 +1,4 @@
-{ compiler ? "ghc90"
+{ compiler ? "ghc810"
 , nixpkgsSrc
 , system
 , packages ? (_: [])

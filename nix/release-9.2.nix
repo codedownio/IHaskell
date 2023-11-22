@@ -1,9 +1,15 @@
-{ compiler ? "ghc928"
-, nixpkgs ? import <nixpkgs> {}
+{ compiler ? "ghc92"
+, nixpkgsSrc
+, system
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
 }:
-  import (./release.nix) { inherit compiler nixpkgs packages pythonPackages rtsopts systemPackages; }
+
+import (./release.nix) {
+  inherit compiler system packages pythonPackages rtsopts systemPackages;
+
+  nixpkgs = import nixpkgsSrc { inherit system; };
+}

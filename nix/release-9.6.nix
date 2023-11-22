@@ -1,9 +1,5 @@
 let
-  nixpkgs-src = builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/02c6061679c99546ccff9ca241025134411e13ad";
-    sha256 = "sha256:03cwv27x1xl9fm2dzdgzm1lz9qimn3w10v8pb7wd4ld459jir8pb";
-  };
-  ghcVersion = "ghc963";
+  ghcVersion = "ghc96";
   overlay = sel: sup: {
     haskell = sup.haskell // {
       packages = sup.haskell.packages // {
@@ -23,13 +19,21 @@ let
       };
     };
   };
+
 in
+
 { compiler ? ghcVersion
-, nixpkgs ? import nixpkgs-src { overlays = [ overlay ]; }
+, nixpkgsSrc
+, system
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
 }:
-  import (./release.nix) { inherit compiler nixpkgs packages pythonPackages rtsopts systemPackages; }
+
+import (./release.nix) {
+  inherit compiler system packages pythonPackages rtsopts systemPackages;
+
+  nixpkgs = import nixpkgsSrc { inherit system; overlays = [ overlay ]; };
+}

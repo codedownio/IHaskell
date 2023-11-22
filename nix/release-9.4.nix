@@ -1,11 +1,6 @@
-let
-  nixpkgs-src = builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/e0990771a605839bc63eaef5edadffb48a040664";
-    sha256 = "sha256:06ja7660glz88ji311ds98frqgf5780c51m9l6chrmj0gh2zf7k9";
-  };
-in
-{ compiler ? "ghc942"
-, nixpkgs ? import nixpkgs-src {}
+{ compiler ? "ghc94"
+, nixpkgsSrc
+, system
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
@@ -13,6 +8,8 @@ in
 , systemPackages ? (_: [])
 }:
 let
+  nixpkgs = import nixpkgsSrc { inherit system; };
+
   ihaskell-src = nixpkgs.nix-gitignore.gitignoreSource
     [ "**/*.ipynb" "**/*.nix" "**/*.yaml" "**/*.yml" "**/\.*" "/Dockerfile" "/README.md" "/cabal.project" "/images" "/notebooks" "/requirements.txt" ]
     ../.;
@@ -34,15 +31,6 @@ let
       '';
     });
     ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ../ghc-parser; name = "ghc-parser-src"; }) {};
-    ghc-syntax-highlighter = let
-      src = nixpkgs.fetchFromGitHub {
-        owner = "mrkkrp";
-        repo = "ghc-syntax-highlighter";
-        rev = "bbc049904524aae08e6431494f41fe2a288f6259";
-        sha256 = "sha256-w7AxGsUfqGhh7wrSPppQ2+gPwjvb4mwExJdDOcasAZ4=";
-      };
-      in
-        self.callCabal2nix "ghc-syntax-highlighter" src {};
     ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ../ipython-kernel; name = "ipython-kernel-src"; }) {};
 
     hlint           = super.hlint_3_5;

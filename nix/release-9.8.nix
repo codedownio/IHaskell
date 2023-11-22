@@ -1,11 +1,6 @@
-let
-  nixpkgs-src = builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/0c086da2bb82029fd00e80bdc117a37a804fd7ff";
-    sha256 = "sha256:1c02n9i4y49cvyw8fylpsvbhiijdc0pppzgn3qwxw6nyj68i3590";
-  };
-in
-{ compiler ? "ghc981"
-, nixpkgs ? import nixpkgs-src {}
+{ compiler ? "ghc98"
+, nixpkgsSrc
+, system
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
@@ -13,6 +8,8 @@ in
 , systemPackages ? (_: [])
 }:
 let
+  nixpkgs = import nixpkgsSrc { inherit system; };
+
   ihaskell-src = nixpkgs.nix-gitignore.gitignoreSource
     [ "**/*.ipynb" "**/*.nix" "**/*.yaml" "**/*.yml" "**/\.*" "/Dockerfile" "/README.md" "/cabal.project" "/images" "/notebooks" "/test" "/requirements.txt" ]
     ../.;
