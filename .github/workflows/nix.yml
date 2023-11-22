@@ -31,6 +31,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         versions:
         - release: 'nix/release-9.0.nix'

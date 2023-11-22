@@ -15,7 +15,7 @@ in
 let
   ihaskell-src = nixpkgs.nix-gitignore.gitignoreSource
     [ "**/*.ipynb" "**/*.nix" "**/*.yaml" "**/*.yml" "**/\.*" "/Dockerfile" "/README.md" "/cabal.project" "/images" "/notebooks" "/test" "/requirements.txt" ]
-    ./.;
+    ../.;
   displays = self: builtins.listToAttrs (
     map
       (display: { name = "ihaskell-${display}"; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
@@ -36,7 +36,7 @@ let
     })).overrideScope (self: super: {
       hlint = null;
     });
-    ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ./ghc-parser; name = "ghc-parser-src"; }) {};
+    ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ../ghc-parser; name = "ghc-parser-src"; }) {};
     ghc-syntax-highlighter = let
       src = nixpkgs.fetchFromGitHub {
         owner = "mrkkrp";
@@ -46,7 +46,7 @@ let
       };
       in
         self.callCabal2nix "ghc-syntax-highlighter" src {};
-    ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ./ipython-kernel; name = "ipython-kernel-src"; }) {};
+    ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ../ipython-kernel; name = "ipython-kernel-src"; }) {};
 
     alex = nixpkgs.haskell.lib.dontCheck super.alex;
     # zeromq4-haskell = nixpkgs.haskell.lib.addPkgconfigDepend super.zeromq4-haskell nixpkgs.libsodium;
