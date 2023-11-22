@@ -14,9 +14,6 @@
       pkgs = import nixpkgs { inherit system; };
       pkgsMaster = import nixpkgsMaster { inherit system; };
 
-      compilerVersionFromHsPkgs = hsPkgs:
-        pkgs.lib.replaceStrings [ "." ] [ "" ] hsPkgs.ghc.version;
-
       # release = import ./nix/release.nix;
       release810 = import ./nix/release-8.10.nix;
       release90 = import ./nix/release-9.0.nix;
@@ -27,7 +24,6 @@
 
       mkEnv = nixpkgsSrc: releaseFn: hsPkgs: displayPkgs:
         releaseFn {
-          compiler = "ghc${compilerVersionFromHsPkgs hsPkgs}";
           inherit nixpkgsSrc;
           system = system;
           packages = displayPkgs;
@@ -72,7 +68,7 @@
         ihaskell-ghc90  = mkExe nixpkgs release90 ghc90;
         ihaskell-ghc92  = mkExe nixpkgs release92 ghc92;
         ihaskell-ghc94  = mkExe nixpkgs release94 ghc94;
-        ihaskell-ghc96  = mkExe nixpkgs release96 ghc96;
+        ihaskell-ghc96  = mkExe nixpkgsMaster release96 ghc96;
         ihaskell-ghc98  = mkExe nixpkgsMaster release98 ghc98;
         ihaskell        = ihaskell-ghc810;
       };
