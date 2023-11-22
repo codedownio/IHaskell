@@ -34,8 +34,8 @@
 
       mkExe = nixpkgsSrc: releaseFn: hsPkgs: (mkEnv nixpkgsSrc releaseFn hsPkgs (_:[])).ihaskellExe;
 
-      inherit (pkgs.haskell.packages) ghc88 ghc810 ghc90 ghc92 ghc94 ghc96;
-      inherit (pkgsMaster.haskell.packages) ghc98;
+      inherit (pkgs.haskell.packages) ghc88 ghc810 ghc90 ghc92;
+      inherit (pkgsMaster.haskell.packages) ghc94 ghc96 ghc98;
 
       # mkDevShell = nixpkgsSrc: hsPkgs:
       #   let
@@ -67,7 +67,7 @@
         ihaskell-ghc810 = mkExe nixpkgs release810 ghc810;
         ihaskell-ghc90  = mkExe nixpkgs release90 ghc90;
         ihaskell-ghc92  = mkExe nixpkgs release92 ghc92;
-        ihaskell-ghc94  = mkExe nixpkgs release94 ghc94;
+        ihaskell-ghc94  = mkExe nixpkgsMaster release94 ghc94;
         ihaskell-ghc96  = mkExe nixpkgsMaster release96 ghc96;
         ihaskell-ghc98  = mkExe nixpkgsMaster release98 ghc98;
         ihaskell        = ihaskell-ghc810;

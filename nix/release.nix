@@ -9,9 +9,8 @@
 }:
 
 let
-  ihaskell-src = nixpkgs.nix-gitignore.gitignoreSource
-    [ "**/*.ipynb" "**/*.nix" "**/*.yaml" "**/*.yml" "**/\.*" "/Dockerfile" "/README.md" "/cabal.project" "/images" "/notebooks" "/test" "/requirements.txt" ]
-    ../.;
+  ihaskell-src = nixpkgs.callPackage ./ihaskell-src.nix {};
+
   displays = self: builtins.listToAttrs (
     map
       (display: { name = "ihaskell-${display}"; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
