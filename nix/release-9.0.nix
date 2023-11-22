@@ -8,7 +8,7 @@
 , systemPackages ? (_: [])
 }:
 
-import (./release.nix) {
+import ./release.nix {
   inherit compiler system packages pythonPackages rtsopts systemPackages;
 
   nixpkgs = import nixpkgsSrc { inherit system; };

@@ -6,16 +6,13 @@ let
       packages = sup.haskell.packages // {
         ${ghcVersion} = sup.haskell.packages.${ghcVersion}.override {
           overrides = self: super: {
-            ghc-syntax-highlighter = let
-              src = sel.fetchFromGitHub {
-                owner = "mrkkrp";
-                repo = "ghc-syntax-highlighter";
-                # version 0.0.10.0
-                rev = "71ff751eaa6034d4aef254d6bc5a8be4f6595344";
-                sha256 = "14yahxi4pnjbvcd9r843kn7b36jsjaixd99jswsrh9n8xd59c2f1";
-              };
-            in
-              self.callCabal2nix "ghc-syntax-highlighter" src {};
+            ghc-syntax-highlighter = super.callCabal2nix "ghc-syntax-highlighter" (sup.fetchFromGitHub {
+              owner = "mrkkrp";
+              repo = "ghc-syntax-highlighter";
+              # 0.0.10.0
+              rev = "71ff751eaa6034d4aef254d6bc5a8be4f6595344";
+              sha256 = "wQmWSuvIJpg11zKl1qOSWpqxjp2DoJwa20vaS2KHypM=";
+            }) {};
 
             ghc-lib-parser = self.ghc-lib-parser_9_6_3_20231014;
 
@@ -40,7 +37,7 @@ in
 , systemPackages ? (_: [])
 }:
 
-import (./release.nix) {
+import ./release.nix {
   inherit compiler system packages pythonPackages rtsopts systemPackages;
 
   nixpkgs = import nixpkgsSrc { inherit system; overlays = [ overlay ]; };
