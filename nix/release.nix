@@ -1,6 +1,5 @@
 { compiler
 , nixpkgs
-, system
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
