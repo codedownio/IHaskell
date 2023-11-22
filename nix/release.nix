@@ -6,6 +6,7 @@
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
+, enableHlint ? true
 }:
 
 let
@@ -20,14 +21,20 @@ let
   });
 
   ihaskellOverlay = (self: super: {
-    ihaskell = nixpkgs.haskell.lib.overrideCabal (
-                     self.callCabal2nix "ihaskell" ihaskell-src {}) (_drv: {
-      preCheck = ''
-        export HOME=$TMPDIR/home
-        export PATH=$PWD/dist/build/ihaskell:$PATH
-        export GHC_PACKAGE_PATH=$PWD/dist/package.conf.inplace/:$GHC_PACKAGE_PATH
-      '';
-    });
+    ihaskell = let
+      baseIhaskell = nixpkgs.haskell.lib.overrideCabal (self.callCabal2nix "ihaskell" ihaskell-src {}) (_drv: {
+        preCheck = ''
+          export HOME=$TMPDIR/home
+          export PATH=$PWD/dist/build/ihaskell:$PATH
+          export GHC_PACKAGE_PATH=$PWD/dist/package.conf.inplace/:$GHC_PACKAGE_PATH
+        '';
+        configureFlags = (_drv.configureFlags or []) ++ (nixpkgs.lib.optionals (!enableHlint) [ "-f" "-use-hlint" ]);
+      });
+    in
+      if enableHlint
+      then baseIhaskell
+      else baseIhaskell.overrideScope (self: super: { hlint = null; });
+
     ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ../ghc-parser; name = "ghc-parser-src"; }) {};
     ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ../ipython-kernel; name = "ipython-kernel-src"; }) {};
   } // displays self);
