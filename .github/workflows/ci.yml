@@ -33,27 +33,19 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-          - stack-yaml: 'stack/stack-8.2.yaml'
-          - stack-yaml: 'stack/stack-8.4.yaml'
-          - stack-yaml: 'stack/stack-8.6.yaml'
-          - stack-yaml: 'stack/stack-8.8.yaml'
-          - stack-yaml: 'stack/stack-8.10.yaml'
-          - stack-yaml: 'stack/stack-9.0.yaml'
-          - stack-yaml: 'stack/stack-9.2.yaml'
-          - stack-yaml: 'stack/stack-9.4.yaml'
-          - stack-yaml: 'stack/stack-9.6.yaml'
-          - stack-yaml: 'stack.yaml'
+        - stack-yaml: 'stack/stack-8.2.yaml'
+        - stack-yaml: 'stack/stack-8.4.yaml'
+        - stack-yaml: 'stack/stack-8.6.yaml'
+        - stack-yaml: 'stack/stack-8.8.yaml'
+        - stack-yaml: 'stack/stack-8.10.yaml'
+        - stack-yaml: 'stack/stack-9.0.yaml'
+        - stack-yaml: 'stack/stack-9.2.yaml'
+        - stack-yaml: 'stack/stack-9.4.yaml'
+        - stack-yaml: 'stack/stack-9.6.yaml'
+        - stack-yaml: 'stack.yaml'
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Cache .stack
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.stack/snapshots
-          key: ${{ runner.os }}-${{ matrix.versions.stack-yaml }}-${{ hashFiles(format('./{0}', matrix.versions.stack-yaml)) }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.versions.stack-yaml }}
 
       - name: Update system dependencies
         run: |
@@ -73,11 +65,17 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
-      - name: Install Stack
-        run: |
-          export PATH=$HOME/.local/bin:$PATH
-          mkdir -p ~/.local/bin
-          curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+      - uses: haskell/actions/setup@v2
+        name: Setup Haskell Stack
+        with:
+          enable-stack: true
+          stack-version: "latest"
+
+      - uses: actions/cache@v3
+        name: Cache ~/.stack
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-${{ matrix.versions.stack-yaml }}-${{ hashFiles(format('./{0}', matrix.versions.stack-yaml)) }}
 
       - name: Build dependencies
         run: |
