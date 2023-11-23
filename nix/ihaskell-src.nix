@@ -9,6 +9,8 @@ nix-gitignore.gitignoreSource [
   "/Dockerfile"
   "/README.md"
   "/cabal.project"
+  "/flake.nix"
+  "/flake.lock"
   "/images"
   "/notebooks"
   "/test"
