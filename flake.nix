@@ -23,14 +23,19 @@
         ghc98 = import ./nix/release-9.8.nix { inherit system; nixpkgsSrc = nixpkgsMaster;  };
       };
 
-      exes = pkgs.lib.mapAttrs' (version: releaseFn: {
-        name = "ihaskell-" + version;
+      envs = pkgs.lib.mapAttrs' (version: releaseFn: {
+        name = "ihaskell-env-" + version;
         value = (releaseFn {
           systemPackages = p: with p; [
             gnuplot # for the ihaskell-gnuplot runtime
           ];
-        }).ihaskellExe;
+        });
       }) versions;
+
+      exes = pkgs.lib.mapAttrs' (envName: env: {
+        name = builtins.replaceStrings ["-env"] [""] envName;
+        value = env.ihaskellExe;
+      }) envs;
 
       devShells = pkgs.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-dev-" + version;
@@ -42,7 +47,9 @@
       }) versions;
 
     in {
-      packages = exes // devShells // rec  {
+      packages = envs // exes // devShells // rec  {
+        # For easily testing that everything builds
+        allEnvs = pkgs.linkFarm "ihaskell-envs" envs;
         allExes = pkgs.linkFarm "ihaskell-exes" exes;
         allDevShells = pkgs.linkFarm "ihaskell-dev-shells" devShells;
 

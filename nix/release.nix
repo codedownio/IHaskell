@@ -13,7 +13,7 @@ let
 
   displays = self: builtins.listToAttrs (
     map
-      (display: { name = "ihaskell-${display}"; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
+      (display: { name = "ihaskell-${display}-" + compiler; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
       [ "aeson" "blaze" "charts" "diagrams" "gnuplot" "graphviz" "hatex" "juicypixels" "magic" "plot" "rlangqq" "static-canvas" "widgets" ]);
   haskellPackages = nixpkgs.haskell.packages."${compiler}".override (old: {
     overrides = nixpkgs.lib.composeExtensions (old.overrides or (_: _: {})) ihaskellOverlay;
@@ -43,11 +43,15 @@ let
   ihaskellExe = if staticExecutable
     then nixpkgs.haskell.lib.justStaticExecutables haskellPackages.ihaskell
     else nixpkgs.haskell.lib.enableSharedExecutables haskellPackages.ihaskell;
+
   ihaskellEnv = haskellPackages.ghcWithPackages packages;
+
   jupyterlab = nixpkgs.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ] ++ pythonPackages ps);
+
   ihaskellGhcLibFunc = exe: env: nixpkgs.writeShellScriptBin "ihaskell" ''
     ${exe}/bin/ihaskell -l $(${env}/bin/ghc --print-libdir) "$@"
   '';
+
   ihaskellKernelFileFunc = ihaskellGhcLib: rtsopts: {
     display_name = "Haskell";
     argv = [
@@ -60,22 +64,26 @@ let
     ];
     language = "haskell";
   };
+
   ihaskellKernelSpecFunc = ihaskellKernelFile: nixpkgs.runCommand "ihaskell-kernel" {} ''
     export kerneldir=$out/kernels/haskell
     mkdir -p $kerneldir
     cp ${../html}/* $kerneldir
     echo '${builtins.toJSON ihaskellKernelFile}' > $kerneldir/kernel.json
   '';
+
   ihaskellLabextension = nixpkgs.runCommand "ihaskell-labextension" {} ''
     mkdir -p $out/labextensions/
     ln -s ${../jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
   '';
+
   ihaskellDataDirFunc = ihaskellKernelSpec: ihaskellLabextension: nixpkgs.buildEnv {
-    name = "ihaskell-data-dir";
+    name = "ihaskell-data-dir-" + compiler;
     paths = [ ihaskellKernelSpec ihaskellLabextension ];
   };
+
   ihaskellBuildEnvFunc = { ihaskellEnv, jupyterlab, systemPackages, ihaskellDataDir }: nixpkgs.buildEnv {
-    name = "ihaskell-with-packages";
+    name = "ihaskell-with-packages-" + compiler;
     nativeBuildInputs = [ nixpkgs.makeWrapper ];
     paths = [ ihaskellEnv jupyterlab ];
     postBuild = ''
@@ -101,7 +109,10 @@ let
       inherit ihaskellBuildEnvFunc;
     };
   };
-in ihaskellBuildEnvFunc {
+
+in
+
+ihaskellBuildEnvFunc {
   inherit ihaskellEnv jupyterlab systemPackages;
   ihaskellDataDir = let
     ihaskellGhcLib = ihaskellGhcLibFunc ihaskellExe ihaskellEnv;
