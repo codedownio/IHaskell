@@ -1,9 +1,10 @@
 { nixpkgsSrc
 , system
+, baseOverlay
 }:
 
 let
-  nixpkgs = import nixpkgsSrc { inherit system; };
+  nixpkgs = import nixpkgsSrc { inherit system; overlays = [baseOverlay]; };
 
 in
 

@@ -1,18 +1,18 @@
-{ nix-gitignore }:
+{ nix-filter
+}:
 
-nix-gitignore.gitignoreSource [
-  "**/*.ipynb"
-  "**/*.nix"
-  "**/*.yaml"
-  "**/*.yml"
-  "**/\.*"
-  "/Dockerfile"
-  "/README.md"
-  "/cabal.project"
-  "/flake.nix"
-  "/flake.lock"
-  "/images"
-  "/notebooks"
-  "/test"
-  "/requirements.txt"
-] ../.
+nix-filter {
+  root = ../.;
+  include = [
+    "LICENSE"
+    "Setup.hs"
+    "ghc-parser"
+    "html"
+    "ihaskell.cabal"
+    "ipython-kernel"
+    "jupyterlab-ihaskell"
+    "main"
+    "src"
+    "test"
+  ];
+}

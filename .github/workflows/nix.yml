@@ -33,13 +33,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        executable:
-        - ihaskell-ghc810
-        - ihaskell-ghc90
-        - ihaskell-ghc92
-        - ihaskell-ghc94
-        - ihaskell-ghc96
-        - ihaskell-ghc98
+        env:
+        - ihaskell-env-ghc810
+        - ihaskell-env-ghc90
+        - ihaskell-env-ghc92
+        - ihaskell-env-ghc94
+        - ihaskell-env-ghc96
+        - ihaskell-env-ghc98
 
     steps:
     - uses: actions/checkout@v3
@@ -54,10 +54,7 @@ jobs:
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
 
     - run: |
-        nix build .#${{matrix.executable}}
+        nix build .#${{matrix.env}}
 
     - run: |
-        nix-shell \
-        -I nixpkgs=https://github.com/NixOS/nixpkgs/tarball/nixos-23.05 \
-        -p jq --run \
-        'test/acceptance.nbconvert.sh result/bin/jupyter nbconvert'
+        nix build .#checks.x86_64-linux.${{matrix.env}} -L

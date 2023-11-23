@@ -26,10 +26,11 @@ in
 
 { nixpkgsSrc
 , system
+, baseOverlay
 }:
 
 let
-  nixpkgs = import nixpkgsSrc { inherit system; overlays = [overlay]; };
+  nixpkgs = import nixpkgsSrc { inherit system; overlays = [baseOverlay overlay]; };
 
 in
 
