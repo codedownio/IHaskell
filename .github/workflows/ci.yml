@@ -64,12 +64,14 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.versions.stack-yaml }}-${{ hashFiles(format('./{0}', matrix.versions.stack-yaml)) }}
 
       - name: Build
-        export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
-        stack build --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+        run: |
+          export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
+          stack build --nix --stack-yaml ${{matrix.versions.stack-yaml}}
 
       - name: Test
-        export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
-        stack test --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+        run: |
+          export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
+          stack test --nix --stack-yaml ${{matrix.versions.stack-yaml}}
 
       - name: Run integration test
         # The test is flaky on GHC 8.0 so we don't run it. As long as the tests
