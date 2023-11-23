@@ -11,16 +11,9 @@ packages:
       size: 238
   original:
     hackage: Chart-cairo-1.9.3
-- completed:
-    hackage: diagrams-cairo-1.4.2@sha256:42807c226188653ab668baceab8fa2245149ed1fc9df595f6e77613ed1259424,3799
-    pantry-tree:
-      sha256: 02aadeb755a93b3a777c6efb597ef33a5a5c2ebcf28e4de7404ce8f1c23e7f1c
-      size: 721
-  original:
-    hackage: diagrams-cairo-1.4.2
 snapshots:
 - completed:
-    sha256: c4381351ba5837a6356fcc0ebeb7a61fdcaf3a085c903a6f730f56b131d5cb58
-    size: 639143
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/1.yaml
-  original: lts-21.1
+    sha256: 7d4b649cf368f9076d8aa049aa44efe58950971d105892734e9957b2a26a2186
+    size: 640060
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/21.yaml
+  original: lts-21.21

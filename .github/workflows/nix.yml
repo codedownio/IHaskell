@@ -53,8 +53,10 @@ jobs:
         name: ihaskell
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
 
-    - run: |
+    - name: Build environment ${{matrix.env}}
+      run: |
         nix build .#${{matrix.env}}
 
-    - run: |
+    - name: Check acceptance test for ${{matrix.env}}
+      run: |
         nix build .#checks.x86_64-linux.${{matrix.env}} -L

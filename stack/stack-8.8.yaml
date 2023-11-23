@@ -1,21 +1,20 @@
-resolver: lts-16.23
+resolver: lts-16.31 # GHC 8.8.4
 
-flags: {}
 packages:
-- .
-- ./ipython-kernel
-- ./ghc-parser
-- ./ihaskell-display/ihaskell-aeson
-- ./ihaskell-display/ihaskell-blaze
-- ./ihaskell-display/ihaskell-charts
-- ./ihaskell-display/ihaskell-diagrams
-- ./ihaskell-display/ihaskell-gnuplot
-- ./ihaskell-display/ihaskell-hatex
-- ./ihaskell-display/ihaskell-juicypixels
-- ./ihaskell-display/ihaskell-magic
-- ./ihaskell-display/ihaskell-plot
-# - ./ihaskell-display/ihaskell-static-canvas
-- ./ihaskell-display/ihaskell-widgets
+- ..
+- ../ipython-kernel
+- ../ghc-parser
+- ../ihaskell-display/ihaskell-aeson
+- ../ihaskell-display/ihaskell-blaze
+- ../ihaskell-display/ihaskell-charts
+- ../ihaskell-display/ihaskell-diagrams
+- ../ihaskell-display/ihaskell-gnuplot
+- ../ihaskell-display/ihaskell-hatex
+- ../ihaskell-display/ihaskell-juicypixels
+- ../ihaskell-display/ihaskell-magic
+- ../ihaskell-display/ihaskell-plot
+# - ../ihaskell-display/ihaskell-static-canvas
+- ../ihaskell-display/ihaskell-widgets
 
 extra-deps:
 - Chart-cairo-1.9.3
@@ -45,6 +44,6 @@ nix:
   - liblapack
   - ncurses
   - pango
-  - pkgconfig
+  - pkg-config
   - zeromq
   - zlib

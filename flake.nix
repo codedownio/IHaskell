@@ -23,10 +23,12 @@
         ghc98 = import ./nix/release-9.8.nix { inherit system baseOverlay; nixpkgsSrc = nixpkgsMaster;  };
       };
 
+      jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
+
       envs = pkgs.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-env-" + version;
         value = (releaseFn {
-          jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
+          inherit jupyterlab;
           systemPackages = p: with p; [
             gnuplot # for the ihaskell-gnuplot runtime
           ];
@@ -53,6 +55,10 @@
         allEnvs = pkgs.linkFarm "ihaskell-envs" envs;
         allExes = pkgs.linkFarm "ihaskell-exes" exes;
         allDevShells = pkgs.linkFarm "ihaskell-dev-shells" devShells;
+
+        print-nixpkgs-stable = pkgs.writeShellScriptBin "print-nixpkgs-stable.sh" "echo ${pkgs.path}";
+        print-nixpkgs-master = pkgs.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
+        inherit jupyterlab;
 
         # Full Jupyter environment with all Display modules (build is not incremental)
         # result/bin/jupyter-lab

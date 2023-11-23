@@ -5,71 +5,19 @@
 
 packages:
 - completed:
-    hackage: here-1.2.13@sha256:6e10d48e2aa17509a47a018719f25e436b520c9c4220a3a899c2faa4f2b2c040,831
+    commit: dfa26022b5815bcd6a5dd6c818fcd2c4d25c6d44
+    git: https://github.com/codedownio/haskell-plot.git
+    name: plot
     pantry-tree:
-      sha256: 5000706df821246050f5f999fdf4d6a7be401f6b4493df201b7d8e238f056646
-      size: 437
+      sha256: f79914b2d62db05a5aa7e1c36ef5fc887270582255172433449ef252aa1d1057
+      size: 2855
+    version: 0.2.3.11
   original:
-    hackage: here-1.2.13
-- completed:
-    hackage: Chart-1.9.4@sha256:197f1507a1bfe84f9b3a5b664564b3b2ff9ccdef8fef1ce883b2e04fd6cf3151,2899
-    pantry-tree:
-      sha256: bfe9e319f5e40539c52005bbc602196553cc8a77b40e2671d6316f87713b47f1
-      size: 3031
-  original:
-    hackage: Chart-1.9.4
-- completed:
-    hackage: Chart-cairo-1.9.3@sha256:5d6f005b5d3d74453a979eb2c6a1777c92ce02eae9e019abbe03a0e008cb8aea,924
-    pantry-tree:
-      sha256: 204f29235d182cc8c8ab40d0a37387e78c1dadc684e190c85e1643521483e681
-      size: 238
-  original:
-    hackage: Chart-cairo-1.9.3
-- completed:
-    hackage: diagrams-1.4.0.1@sha256:5d003c391fff00c945f8014c24bac0ea7b8daa9500349bef4646fa620a0c5327,5480
-    pantry-tree:
-      sha256: a28c20bbb11eddd3546fa98f2599507046fc490a4df71da6e928ad3653f2ed50
-      size: 208
-  original:
-    hackage: diagrams-1.4.0.1
-- completed:
-    hackage: diagrams-cairo-1.4.2@sha256:42807c226188653ab668baceab8fa2245149ed1fc9df595f6e77613ed1259424,3799
-    pantry-tree:
-      sha256: 02aadeb755a93b3a777c6efb597ef33a5a5c2ebcf28e4de7404ce8f1c23e7f1c
-      size: 721
-  original:
-    hackage: diagrams-cairo-1.4.2
-- completed:
-    hackage: diagrams-contrib-1.4.5@sha256:a8189c76c596a9acc5da5ce916d813107f287cbbf200c6c546864d84724dba44,4753
-    pantry-tree:
-      sha256: f202b8cf7dcb39a01ad90fe00cb87603fdbf441855b2e88c1697400f46f8feb8
-      size: 11388
-  original:
-    hackage: diagrams-contrib-1.4.5
-- completed:
-    hackage: cubicbezier-0.6.0.6@sha256:947bee1233d315fdab40c446771bab865827acd55c56874aaaa6de0a14b69120,2284
-    pantry-tree:
-      sha256: 657ba9f6c2afb791cc10b0065c8de366f4859f4e9e612b79f360f547f2b5169c
-      size: 1029
-  original:
-    hackage: cubicbezier-0.6.0.6
-- completed:
-    hackage: mfsolve-0.3.2.1@sha256:4a1799fb82e0f2753b3c7db3124ced3bd5a9b9fcd970d6e941a7af404d946824,1268
-    pantry-tree:
-      sha256: 28d219249b7b1dbc33a144919f55ebc9bb0d24dfeb518105cea39e70afb320f6
-      size: 262
-  original:
-    hackage: mfsolve-0.3.2.1
-- completed:
-    hackage: plot-0.2.3.11@sha256:9564d62da798b74a5ab875996f45adf1c3071e161247faa9a9d1b036e6634a4a,4413
-    pantry-tree:
-      sha256: 2b9cb15fa582d3cdc9f43e6ffaf401e36535909b3620c5f54bd9b7cca5dfeb44
-      size: 2704
-  original:
-    hackage: plot-0.2.3.11
+    commit: dfa26022b5815bcd6a5dd6c818fcd2c4d25c6d44
+    git: https://github.com/codedownio/haskell-plot.git
 snapshots:
 - completed:
-    sha256: e134cdce2ef4c28a0791a8c33aa6e35d4a3eeebc30b842a3062b318b84ae2b68
-    size: 544564
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2023/7/7.yaml
-  original: nightly-2023-07-07
+    sha256: 3a1d76b27b77ecf9541ee3723756ff85d7bca58340a6858e760a1d7ef4d055bd
+    size: 698983
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2023/11/23.yaml
+  original: nightly-2023-11-23
