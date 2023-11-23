@@ -9,13 +9,12 @@ in
 
 { compiler ? "ghc92"
 , packages ? (_: [])
-, pythonPackages ? (_: [])
+, jupyterlab ? nixpkgs.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ])
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
 }:
 
 import ./release.nix {
-  inherit nixpkgs;
-  inherit compiler packages pythonPackages rtsopts systemPackages;
+  inherit nixpkgs jupyterlab compiler packages rtsopts systemPackages;
 }

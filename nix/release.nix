@@ -1,7 +1,7 @@
 { compiler
 , nixpkgs
+, jupyterlab
 , packages ? (_: [])
-, pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
@@ -46,8 +46,6 @@ let
 
   ihaskellEnv = haskellPackages.ghcWithPackages packages;
 
-  jupyterlab = nixpkgs.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ] ++ pythonPackages ps);
-
   ihaskellGhcLibFunc = exe: env: nixpkgs.writeShellScriptBin "ihaskell" ''
     ${exe}/bin/ihaskell -l $(${env}/bin/ghc --print-libdir) "$@"
   '';
@@ -82,7 +80,7 @@ let
     paths = [ ihaskellKernelSpec ihaskellLabextension ];
   };
 
-  ihaskellBuildEnvFunc = { ihaskellEnv, jupyterlab, systemPackages, ihaskellDataDir }: nixpkgs.buildEnv {
+  ihaskellBuildEnvFunc = { ihaskellEnv, systemPackages, ihaskellDataDir }: nixpkgs.buildEnv {
     name = "ihaskell-with-packages-" + compiler;
     nativeBuildInputs = [ nixpkgs.makeWrapper ];
     paths = [ ihaskellEnv jupyterlab ];
@@ -101,7 +99,6 @@ let
       inherit ihaskellEnv;
       inherit ihaskellOverlay;
       inherit ihaskellLabextension;
-      inherit jupyterlab;
       inherit ihaskellGhcLibFunc;
       inherit ihaskellKernelFileFunc;
       inherit ihaskellKernelSpecFunc;
@@ -113,7 +110,7 @@ let
 in
 
 ihaskellBuildEnvFunc {
-  inherit ihaskellEnv jupyterlab systemPackages;
+  inherit ihaskellEnv systemPackages;
   ihaskellDataDir = let
     ihaskellGhcLib = ihaskellGhcLibFunc ihaskellExe ihaskellEnv;
     ihaskellKernelFile = ihaskellKernelFileFunc ihaskellGhcLib rtsopts;

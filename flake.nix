@@ -26,6 +26,7 @@
       envs = pkgs.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-env-" + version;
         value = (releaseFn {
+          jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
           systemPackages = p: with p; [
             gnuplot # for the ihaskell-gnuplot runtime
           ];
