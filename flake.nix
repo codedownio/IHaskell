@@ -23,31 +23,6 @@
         ghc98 = import ./nix/release-9.8.nix { inherit system; nixpkgsSrc = nixpkgsMaster;  };
       };
 
-      # mkDevShell = nixpkgsSrc: hsPkgs:
-      #   let
-      #     compilerVersion = compilerVersionFromHsPkgs hsPkgs;
-      #     devIHaskell = hsPkgs.developPackage {
-      #       root =  pkgs.lib.cleanSource ./.;
-      #       name = "ihaskell";
-      #       returnShellEnv = false;
-      #       modifier = pkgs.haskell.lib.dontCheck;
-      #       overrides = (mkEnv nixpkgsSrc release hsPkgs (_:[])).ihaskellOverlay ;
-      #       withHoogle = true;
-      #     };
-
-      #     devModifier = drv:
-      #       pkgs.haskell.lib.addBuildTools drv (with hsPkgs; [
-      #         cabal-install
-      #         (pkgs.python3.withPackages (p: [p.jupyterlab]))
-      #         self.inputs.hls.packages.${system}."haskell-language-server-${compilerVersion}"
-      #         pkgs.cairo # for the ihaskell-charts HLS dev environment
-      #         pkgs.pango # for the ihaskell-diagrams HLS dev environment
-      #         pkgs.lapack # for the ihaskell-plot HLS dev environment
-      #         pkgs.blas # for the ihaskell-plot HLS dev environment
-      #       ]);
-      #   in
-      #     (devModifier devIHaskell).envFunc {withHoogle=true;};
-
       exes = pkgs.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-" + version;
         value = (releaseFn {
@@ -57,39 +32,41 @@
         }).ihaskellExe;
       }) versions;
 
-    in {
-      packages = exes // rec {
-        # Development environment
-        # ihaskell-dev-88  = mkDevShell nixpkgs ghc88;
-        # ihaskell-dev-810 = mkDevShell nixpkgs ghc810;
-        # ihaskell-dev-90  = mkDevShell nixpkgs ghc90;
-        # ihaskell-dev-92  = mkDevShell nixpkgs ghc92;
-        # ihaskell-dev-94  = mkDevShell nixpkgs ghc94;
-        # ihaskell-dev-96  = mkDevShell nixpkgs ghc96;
-        # ihaskell-dev-98  = mkDevShell nixpkgsMaster ghc98;
-        # ihaskell-dev     = ihaskell-dev-96;
+      devShells = pkgs.lib.mapAttrs' (version: releaseFn: {
+        name = "ihaskell-dev-" + version;
+        value = pkgs.callPackage ./nix/mkDevShell.nix {
+          inherit hls system version;
+          haskellPackages = (releaseFn {}).haskellPackages;
+          ihaskellOverlay = (releaseFn {}).ihaskellOverlay;
+        };
+      }) versions;
 
+    in {
+      packages = exes // devShells // rec  {
         allExes = pkgs.linkFarm "ihaskell-exes" exes;
+        allDevShells = pkgs.linkFarm "ihaskell-dev-shells" devShells;
 
         # Full Jupyter environment with all Display modules (build is not incremental)
         # result/bin/jupyter-lab
-        # ihaskell-env-display = mkEnv ghc810 (p: with p; [
-        #   ihaskell-aeson
-        #   ihaskell-blaze
-        #   ihaskell-charts
-        #   ihaskell-diagrams
-        #   ihaskell-gnuplot
-        #   ihaskell-graphviz
-        #   ihaskell-hatex
-        #   ihaskell-juicypixels
-        #   ihaskell-magic
-        #   ihaskell-plot
-        #   ihaskell-widgets
-        # ]);
+        ihaskell-env-display = versions.ghc810 {
+          packages = p: with p; [
+            ihaskell-aeson
+            ihaskell-blaze
+            ihaskell-charts
+            ihaskell-diagrams
+            ihaskell-gnuplot
+            ihaskell-graphviz
+            ihaskell-hatex
+            ihaskell-juicypixels
+            ihaskell-magic
+            ihaskell-plot
+            ihaskell-widgets
+          ];
+        };
       };
 
       defaultPackage = self.packages.${system}.ihaskell-ghc810;
 
-      # devShell = self.packages.${system}.ihaskell-dev;
+      devShell = self.packages.${system}.ihaskell-dev-ghc810;
     });
 }

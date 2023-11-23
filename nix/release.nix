@@ -63,12 +63,12 @@ let
   ihaskellKernelSpecFunc = ihaskellKernelFile: nixpkgs.runCommand "ihaskell-kernel" {} ''
     export kerneldir=$out/kernels/haskell
     mkdir -p $kerneldir
-    cp ${./html}/* $kerneldir
+    cp ${../html}/* $kerneldir
     echo '${builtins.toJSON ihaskellKernelFile}' > $kerneldir/kernel.json
   '';
   ihaskellLabextension = nixpkgs.runCommand "ihaskell-labextension" {} ''
     mkdir -p $out/labextensions/
-    ln -s ${./jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
+    ln -s ${../jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
   '';
   ihaskellDataDirFunc = ihaskellKernelSpec: ihaskellLabextension: nixpkgs.buildEnv {
     name = "ihaskell-data-dir";
