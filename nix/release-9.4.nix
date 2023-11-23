@@ -24,9 +24,16 @@ let
 
 in
 
-{ compiler ? ghcVersion
-, nixpkgsSrc
+{ nixpkgsSrc
 , system
+}:
+
+let
+  nixpkgs = import nixpkgsSrc { inherit system; overlays = [overlay]; };
+
+in
+
+{ compiler ? ghcVersion
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
@@ -35,7 +42,6 @@ in
 }:
 
 import ./release.nix {
+  inherit nixpkgs;
   inherit compiler packages pythonPackages rtsopts systemPackages;
-
-  nixpkgs = import nixpkgsSrc { inherit system; overlays = [ overlay ]; };
 }

@@ -14,28 +14,14 @@
       pkgs = import nixpkgs { inherit system; };
       pkgsMaster = import nixpkgsMaster { inherit system; };
 
-      # release = import ./nix/release.nix;
-      release810 = import ./nix/release-8.10.nix;
-      release90 = import ./nix/release-9.0.nix;
-      release92 = import ./nix/release-9.2.nix;
-      release94 = import ./nix/release-9.4.nix;
-      release96 = import ./nix/release-9.6.nix;
-      release98 = import ./nix/release-9.8.nix;
-
-      mkEnv = nixpkgsSrc: releaseFn: hsPkgs: displayPkgs:
-        releaseFn {
-          inherit nixpkgsSrc;
-          system = system;
-          packages = displayPkgs;
-          systemPackages = p: with p; [
-            gnuplot # for the ihaskell-gnuplot runtime
-          ];
-        };
-
-      mkExe = nixpkgsSrc: releaseFn: hsPkgs: (mkEnv nixpkgsSrc releaseFn hsPkgs (_:[])).ihaskellExe;
-
-      inherit (pkgs.haskell.packages) ghc88 ghc810 ghc90 ghc92;
-      inherit (pkgsMaster.haskell.packages) ghc94 ghc96 ghc98;
+      versions = {
+        ghc810 = import ./nix/release-8.10.nix { inherit system; nixpkgsSrc = nixpkgs; };
+        ghc90 = import ./nix/release-9.0.nix { inherit system; nixpkgsSrc = nixpkgs; };
+        ghc92 = import ./nix/release-9.2.nix { inherit system; nixpkgsSrc = nixpkgs; };
+        ghc94 = import ./nix/release-9.4.nix { inherit system; nixpkgsSrc = nixpkgsMaster; };
+        ghc96 = import ./nix/release-9.6.nix { inherit system; nixpkgsSrc = nixpkgsMaster; };
+        ghc98 = import ./nix/release-9.8.nix { inherit system; nixpkgsSrc = nixpkgsMaster;  };
+      };
 
       # mkDevShell = nixpkgsSrc: hsPkgs:
       #   let
@@ -62,16 +48,14 @@
       #   in
       #     (devModifier devIHaskell).envFunc {withHoogle=true;};
 
-      exes = rec {
-        # ihaskell-ghc88  = mkExe release   ghc88;
-        ihaskell-ghc810 = mkExe nixpkgs release810 ghc810;
-        ihaskell-ghc90  = mkExe nixpkgs release90 ghc90;
-        ihaskell-ghc92  = mkExe nixpkgs release92 ghc92;
-        ihaskell-ghc94  = mkExe nixpkgsMaster release94 ghc94;
-        ihaskell-ghc96  = mkExe nixpkgsMaster release96 ghc96;
-        ihaskell-ghc98  = mkExe nixpkgsMaster release98 ghc98;
-        ihaskell        = ihaskell-ghc810;
-      };
+      exes = pkgs.lib.mapAttrs' (version: releaseFn: {
+        name = "ihaskell-" + version;
+        value = (releaseFn {
+          systemPackages = p: with p; [
+            gnuplot # for the ihaskell-gnuplot runtime
+          ];
+        }).ihaskellExe;
+      }) versions;
 
     in {
       packages = exes // rec {
@@ -85,7 +69,7 @@
         # ihaskell-dev-98  = mkDevShell nixpkgsMaster ghc98;
         # ihaskell-dev     = ihaskell-dev-96;
 
-        all = pkgs.linkFarm "ihaskell-exes" exes;
+        allExes = pkgs.linkFarm "ihaskell-exes" exes;
 
         # Full Jupyter environment with all Display modules (build is not incremental)
         # result/bin/jupyter-lab
@@ -104,7 +88,7 @@
         # ]);
       };
 
-      defaultPackage = self.packages.${system}.ihaskell;
+      defaultPackage = self.packages.${system}.ihaskell-ghc810;
 
       # devShell = self.packages.${system}.ihaskell-dev;
     });

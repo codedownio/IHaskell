@@ -1,6 +1,13 @@
-{ compiler ? "ghc90"
-, nixpkgsSrc
+{ nixpkgsSrc
 , system
+}:
+
+let
+  nixpkgs = import nixpkgsSrc { inherit system; };
+
+in
+
+{ compiler ? "ghc90"
 , packages ? (_: [])
 , pythonPackages ? (_: [])
 , rtsopts ? "-M3g -N2"
@@ -9,7 +16,6 @@
 }:
 
 import ./release.nix {
+  inherit nixpkgs;
   inherit compiler packages pythonPackages rtsopts systemPackages;
-
-  nixpkgs = import nixpkgsSrc { inherit system; };
 }
