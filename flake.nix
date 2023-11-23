@@ -80,8 +80,8 @@
           nativeBuildInputs = with pkgs; [jq bash];
           doCheck = true;
           checkPhase = ''
-            ls -lh
-            ls -lh test
+            mkdir -p home
+            export HOME=$(pwd)/home
             bash ./test/acceptance.nbconvert.sh ${env}/bin/jupyter nbconvert
           '';
           installPhase = ''
