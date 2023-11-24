@@ -85,11 +85,16 @@ jobs:
           export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
 
           nix build .#jupyterlab
-          export PATH="$(pwd)/result/bin:$PATH"
+          export PATH="$(pwd)/result/bin:$(pwd)/.local/bin:$PATH"
 
-          stack build --no-terminal --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+          stack install --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+
+          echo "PATH: $PATH"
+          echo "jupyter: $(which jupyter)"
+          echo "ihaskell: $(which ihaskell)"
+
+          ihaskell install --stack
+
           # Ensure that IHaskell notebook remains unchanged.
           # Run the notebook to regenerate the outputs, then compare the new notebook to the old one.
-          stack install --nix --stack-yaml ${{matrix.versions.stack-yaml}}
-          stack exec --nix --stack-yaml ${{matrix.versions.stack-yaml}} -- ihaskell install --stack
-          test/acceptance.nbconvert.sh stack exec -- jupyter nbconvert
+          test/acceptance.nbconvert.sh stack exec --nix --stack-yaml ${{matrix.versions.stack-yaml}} -- jupyter nbconvert
