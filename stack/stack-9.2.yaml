@@ -33,6 +33,6 @@ nix:
   - liblapack
   - ncurses
   - pango
-  - pkgconfig
+  - pkg-config
   - zeromq
   - zlib
