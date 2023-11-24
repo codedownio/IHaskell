@@ -86,9 +86,9 @@ jobs:
           export PATH="$(pwd)/result/bin:$PATH"
           echo "Got PATH: $PATH"
 
-          stack build --no-terminal
+          stack build --no-terminal --nix --stack-yaml ${{matrix.versions.stack-yaml}}
           # Ensure that IHaskell notebook remains unchanged.
           # Run the notebook to regenerate the outputs, then compare the new notebook to the old one.
-          stack install
-          stack exec -- ihaskell install --stack
+          stack install --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+          stack exec --nix --stack-yaml ${{matrix.versions.stack-yaml}} -- ihaskell install --stack
           test/acceptance.nbconvert.sh stack exec -- jupyter nbconvert
