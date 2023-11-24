@@ -97,4 +97,4 @@ jobs:
 
           # Ensure that IHaskell notebook remains unchanged.
           # Run the notebook to regenerate the outputs, then compare the new notebook to the old one.
-          test/acceptance.nbconvert.sh stack exec --nix --stack-yaml ${{matrix.versions.stack-yaml}} -- jupyter nbconvert
+          test/acceptance.nbconvert.sh stack exec --nix --no-nix-pure --stack-yaml ${{matrix.versions.stack-yaml}} -- jupyter nbconvert
