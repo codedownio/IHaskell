@@ -82,9 +82,10 @@ jobs:
         run: |
           set -e
 
+          export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
+
           nix build .#jupyterlab
           export PATH="$(pwd)/result/bin:$PATH"
-          echo "Got PATH: $PATH"
 
           stack build --no-terminal --nix --stack-yaml ${{matrix.versions.stack-yaml}}
           # Ensure that IHaskell notebook remains unchanged.
