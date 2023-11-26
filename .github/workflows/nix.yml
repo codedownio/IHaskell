@@ -1,4 +1,5 @@
-name: "Nix"
+name: Nix
+
 on:
   schedule:
   - cron: '0 2 * * *'

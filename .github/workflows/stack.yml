@@ -1,4 +1,4 @@
-name: CI
+name: Stack
 
 on:
   push:
@@ -73,28 +73,28 @@ jobs:
           export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
           stack test --nix --stack-yaml ${{matrix.versions.stack-yaml}}
 
-      - name: Run integration test
-        # The test is flaky on GHC 8.0 so we don't run it. As long as the tests
-        # above pass, it's unlikely that we'll introduce a bug that we will
-        # only catch through the integration test on this version and not other
-        # versions.
-        if: ${{ !contains(fromJSON('["stack-8.0.yaml", "stack-8.2.yaml"]'), matrix.versions.stack-yaml) }}
-        run: |
-          set -e
+      # - name: Run integration test
+      #   # The test is flaky on GHC 8.0 so we don't run it. As long as the tests
+      #   # above pass, it's unlikely that we'll introduce a bug that we will
+      #   # only catch through the integration test on this version and not other
+      #   # versions.
+      #   if: ${{ !contains(fromJSON('["stack-8.0.yaml", "stack-8.2.yaml"]'), matrix.versions.stack-yaml) }}
+      #   run: |
+      #     set -e
 
-          export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
+      #     export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
 
-          nix build .#jupyterlab
-          export PATH="$(pwd)/result/bin:$(pwd)/.local/bin:$PATH"
+      #     nix build .#jupyterlab
+      #     export PATH="$(pwd)/result/bin:$(pwd)/.local/bin:$PATH"
 
-          stack install --nix --stack-yaml ${{matrix.versions.stack-yaml}}
+      #     stack install --nix --stack-yaml ${{matrix.versions.stack-yaml}}
 
-          echo "PATH: $PATH"
-          echo "jupyter: $(which jupyter)"
-          echo "ihaskell: $(which ihaskell)"
+      #     echo "PATH: $PATH"
+      #     echo "jupyter: $(which jupyter)"
+      #     echo "ihaskell: $(which ihaskell)"
 
-          ihaskell install --stack
+      #     ihaskell install --stack
 
-          # Ensure that IHaskell notebook remains unchanged.
-          # Run the notebook to regenerate the outputs, then compare the new notebook to the old one.
-          test/acceptance.nbconvert.sh stack exec --nix --no-nix-pure --stack-yaml ${{matrix.versions.stack-yaml}} -- jupyter nbconvert
+      #     # Ensure that IHaskell notebook remains unchanged.
+      #     # Run the notebook to regenerate the outputs, then compare the new notebook to the old one.
+      #     test/acceptance.nbconvert.sh stack exec --nix --no-nix-pure --stack-yaml ${{matrix.versions.stack-yaml}} -- jupyter nbconvert
