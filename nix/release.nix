@@ -9,81 +9,55 @@
 }:
 
 let
-  ihaskell-src = nixpkgs.callPackage ./ihaskell-src.nix {};
-
-  displays = self: builtins.listToAttrs (
-    map
-      (display: { name = "ihaskell-${display}-" + compiler; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
-      [ "aeson" "blaze" "charts" "diagrams" "gnuplot" "graphviz" "hatex" "juicypixels" "magic" "plot" "rlangqq" "static-canvas" "widgets" ]);
-
+  # Haskell packages set with IHaskell packages added
   haskellPackages = nixpkgs.haskell.packages."${compiler}".override (old: {
-    overrides = nixpkgs.lib.composeExtensions (old.overrides or (_: _: {})) ihaskellOverlay;
+    overrides = nixpkgs.lib.composeExtensions
+      (old.overrides or (_: _: {}))
+      (import ./ihaskell_overlay.nix { inherit compiler nixpkgs enableHlint; });
   });
 
-  ihaskellOverlay = (self: super: {
-    ihaskell = let
-      baseIhaskell = nixpkgs.haskell.lib.overrideCabal (self.callCabal2nix "ihaskell" ihaskell-src {}) (_drv: {
-        preCheck = ''
-          export HOME=$TMPDIR/home
-          export PATH=$PWD/dist/build/ihaskell:$PATH
-          export GHC_PACKAGE_PATH=$PWD/dist/package.conf.inplace/:$GHC_PACKAGE_PATH
-        '';
-        configureFlags = (_drv.configureFlags or []) ++ (nixpkgs.lib.optionals (!enableHlint) [ "-f" "-use-hlint" ]);
-      });
-    in
-      if enableHlint
-      then baseIhaskell
-      else baseIhaskell.overrideScope (self: super: { hlint = null; });
+  # GHC with desired packages. This includes user-configured packages + ihaskell itself, so
+  # you can import IHaskell.Display
+  ihaskellEnv = haskellPackages.ghcWithPackages (ps: (packages ps) ++ [ps.ihaskell]);
 
-    ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ../ghc-parser; name = "ghc-parser-src"; }) {};
-    ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ../ipython-kernel; name = "ipython-kernel-src"; }) {};
-  } // displays self);
-
-  # statically linking against haskell libs reduces closure size at the expense
-  # of startup/reload time, so we make it configurable
-  ihaskellExe = if staticExecutable
-                then nixpkgs.haskell.lib.justStaticExecutables haskellPackages.ihaskell
-                else nixpkgs.haskell.lib.enableSharedExecutables haskellPackages.ihaskell;
-
-  ihaskellEnv = haskellPackages.ghcWithPackages packages;
-
-  ihaskellKernelSpecFunc = ihaskellGhcLib: rtsopts:
-    let
-      kernelFile = {
-        display_name = "Haskell";
-        argv = [
-          "${ihaskellGhcLib}/bin/ihaskell"
-          "kernel"
-          "{connection_file}"
-          "+RTS"
-        ] ++ (nixpkgs.lib.splitString " " rtsopts) ++ [
-          "-RTS"
-        ];
-        language = "haskell";
-      };
-    in
-      nixpkgs.runCommand "ihaskell-kernel" {} ''
-        export kerneldir=$out/kernels/haskell
-        mkdir -p $kerneldir
-        cp ${../html}/* $kerneldir
-        echo '${builtins.toJSON kernelFile}' > $kerneldir/kernel.json
-      '';
-
-  ihaskellLabextension = nixpkgs.runCommand "ihaskell-labextension" {} ''
-    mkdir -p $out/labextensions/
-    ln -s ${../jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
-  '';
-
+  # ihaskell binary wrapper which adds the "-l" argument
   ihaskellGhcLib = nixpkgs.writeShellScriptBin "ihaskell" ''
     ${ihaskellEnv}/bin/ihaskell -l $(${ihaskellEnv}/bin/ghc --print-libdir) "$@"
   '';
 
+  # Jupyter directory with "kernels/haskell/kernel.json", plus logo and kernel.js
+  jupyterDirKernel = let
+    kernelFile = {
+      display_name = "Haskell";
+      argv = [
+        "${ihaskellGhcLib}/bin/ihaskell"
+        "kernel"
+        "{connection_file}"
+        "+RTS"
+      ] ++ (nixpkgs.lib.splitString " " rtsopts) ++ [
+        "-RTS"
+      ];
+      language = "haskell";
+    };
+  in
+    nixpkgs.runCommand "ihaskell-kernel" {} ''
+      export kerneldir=$out/kernels/haskell
+      mkdir -p $kerneldir
+      cp ${../html}/* $kerneldir
+      echo '${builtins.toJSON kernelFile}' > $kerneldir/kernel.json
+    '';
+
+  # Separate Jupyter directory with the "labextensions" dir.
+  # TODO: just copy this alongside the HTML in jupyterDir?
+  jupyterDirLabExtensions = nixpkgs.runCommand "ihaskell-labextension" {} ''
+    mkdir -p $out/labextensions/
+    ln -s ${../jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
+  '';
+
+  # Combine the paths in jupyterDirKernel and jupyterDirLabExtensions
   ihaskellDataDir = nixpkgs.buildEnv {
     name = "ihaskell-data-dir-" + compiler;
-    paths = [
-      (ihaskellKernelSpecFunc ihaskellGhcLib rtsopts)
-      ihaskellLabextension
-    ];
+    paths = [ jupyterDirKernel jupyterDirLabExtensions ];
   };
 
 in
@@ -103,6 +77,10 @@ nixpkgs.buildEnv {
   '';
 
   passthru = {
-    inherit ihaskellExe;
+    # statically linking against haskell libs reduces closure size at the expense
+    # of startup/reload time, so we make it configurable
+    ihaskellExe = if staticExecutable
+                  then nixpkgs.haskell.lib.justStaticExecutables haskellPackages.ihaskell
+                  else nixpkgs.haskell.lib.enableSharedExecutables haskellPackages.ihaskell;
   };
 }
