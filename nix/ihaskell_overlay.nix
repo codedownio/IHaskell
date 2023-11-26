@@ -6,10 +6,28 @@
 let
   ihaskell-src = nixpkgs.callPackage ./ihaskell-src.nix {};
 
-  displays = self: builtins.listToAttrs (
-    map
-      (display: { name = "ihaskell-${display}-" + compiler; value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {}; })
-      [ "aeson" "blaze" "charts" "diagrams" "gnuplot" "graphviz" "hatex" "juicypixels" "magic" "plot" "rlangqq" "static-canvas" "widgets" ]);
+  displays = self:
+    let
+      mkDisplay = display: {
+        name = "ihaskell-${display}-" + compiler;
+        value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {};
+      };
+    in
+    builtins.listToAttrs (map mkDisplay [
+      "aeson"
+      "blaze"
+      "charts"
+      "diagrams"
+      "gnuplot"
+      "graphviz"
+      "hatex"
+      "juicypixels"
+      "magic"
+      "plot"
+      "rlangqq"
+      "static-canvas"
+      "widgets"
+    ]);
 
 in
 
