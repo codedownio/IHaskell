@@ -28,7 +28,8 @@
       envs = pkgs.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-env-" + version;
         value = (releaseFn {
-          inherit jupyterlab;
+          # Note: this can be changed to other Jupyter systems like jupyter-console
+          extraEnvironmentBinaries = [ jupyterlab ];
           systemPackages = p: with p; [
             gnuplot # for the ihaskell-gnuplot runtime
           ];

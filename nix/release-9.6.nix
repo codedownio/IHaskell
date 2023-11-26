@@ -39,12 +39,12 @@ in
 
 { compiler ? ghcVersion
 , packages ? (_: [])
-, jupyterlab ? nixpkgs.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ])
+, extraEnvironmentBinaries ? []
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
 }:
 
 import ./release.nix {
-  inherit nixpkgs compiler jupyterlab packages rtsopts systemPackages;
+  inherit nixpkgs compiler packages extraEnvironmentBinaries rtsopts staticExecutable systemPackages;
 }

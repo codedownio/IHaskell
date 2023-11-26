@@ -1,7 +1,15 @@
-{ compiler
+{
+# Compiler name as a string, like "ghc92".
+# Must be a kernel found within nixpkgs.haskell.packages.*.
+compiler
+# Imported Nixpkgs set.
 , nixpkgs
-, jupyterlab
+# Extra binaries to include in the final environment, like jupyter-lab or jupyter-console.
+# Will have their JUPYTER_PATH and PATH environment variables prefixed to tell them about the kernel.
+, extraEnvironmentBinaries ? []
+# Haskell packages to include. First argument is an attrset of available packages.
 , packages ? (_: [])
+# RTS options passed when invoking IHaskell in the kernelspec.
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
@@ -16,8 +24,8 @@ let
       (import ./ihaskell_overlay.nix { inherit compiler nixpkgs enableHlint; });
   });
 
-  # GHC with desired packages. This includes user-configured packages + ihaskell itself, so
-  # you can import IHaskell.Display
+  # GHC with desired packages. This includes user-configured packages plus IHaskell itself, so
+  # you can import things like IHaskell.Display
   ihaskellEnv = haskellPackages.ghcWithPackages (ps: (packages ps) ++ [ps.ihaskell]);
 
   # ihaskell binary wrapper which adds the "-l" argument
@@ -25,7 +33,7 @@ let
     ${ihaskellEnv}/bin/ihaskell -l $(${ihaskellEnv}/bin/ghc --print-libdir) "$@"
   '';
 
-  # Jupyter directory with "kernels/haskell/kernel.json", plus logo and kernel.js
+  # Jupyter directory with kernels/haskell/kernel.json, plus logo and kernel.js
   jupyterDirKernel = let
     kernelFile = {
       display_name = "Haskell";
@@ -62,10 +70,11 @@ let
 
 in
 
+# Final IHaskell environment:
 nixpkgs.buildEnv {
   name = "ihaskell-with-packages-" + compiler;
   nativeBuildInputs = [ nixpkgs.makeWrapper ];
-  paths = [ ihaskellEnv jupyterlab ];
+  paths = [ ihaskellEnv ] ++ extraEnvironmentBinaries;
   postBuild = ''
     for prg in $out/bin"/"*;do
       if [[ -f $prg && -x $prg ]]; then
