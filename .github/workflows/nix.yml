@@ -59,5 +59,7 @@ jobs:
         nix build .#${{matrix.env}}
 
     - name: Check acceptance test for ${{matrix.env}}
+      # Disable GHC 9.8 here since we don't have hlint support yet
+      if: ${{ !contains(fromJSON('["ghc98"]'), matrix.versions.stack-yaml) }}
       run: |
         nix build .#checks.x86_64-linux.${{matrix.env}} -L
