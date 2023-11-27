@@ -1,9 +1,15 @@
-{
+{ lib
+, buildEnv
+, callPackage
+, haskell
+, makeWrapper
+, pkgs
+, runCommand
+, writeShellScriptBin
+
 # Compiler name as a string, like "ghc92".
-# Must be a kernel found within nixpkgs.haskell.packages.*.
-compiler
-# Imported Nixpkgs set.
-, nixpkgs
+# Must be a kernel found within pkgs.haskell.packages.*.
+, compiler
 # Whether to enable hlint.
 , enableHlint ? true
 }:
@@ -22,10 +28,10 @@ extraEnvironmentBinaries ? []
 
 let
   # Haskell packages set with IHaskell packages added
-  haskellPackages = nixpkgs.haskell.packages."${compiler}".override (old: {
-    overrides = nixpkgs.lib.composeExtensions
+  haskellPackages = haskell.packages."${compiler}".override (old: {
+    overrides = lib.composeExtensions
       (old.overrides or (_: _: {}))
-      (import ./ihaskell_overlay.nix { inherit compiler nixpkgs enableHlint; });
+      (callPackage ./ihaskell_overlay.nix { inherit compiler enableHlint; });
   });
 
   # GHC with desired packages. This includes user-configured packages plus IHaskell itself, so
@@ -33,7 +39,7 @@ let
   ihaskellEnv = haskellPackages.ghcWithPackages (ps: (packages ps) ++ [ps.ihaskell]);
 
   # ihaskell binary wrapper which adds the "-l" argument
-  ihaskellGhcLib = nixpkgs.writeShellScriptBin "ihaskell" ''
+  ihaskellGhcLib = writeShellScriptBin "ihaskell" ''
     ${ihaskellEnv}/bin/ihaskell -l $(${ihaskellEnv}/bin/ghc --print-libdir) "$@"
   '';
 
@@ -46,13 +52,13 @@ let
         "kernel"
         "{connection_file}"
         "+RTS"
-      ] ++ (nixpkgs.lib.splitString " " rtsopts) ++ [
+      ] ++ (lib.splitString " " rtsopts) ++ [
         "-RTS"
       ];
       language = "haskell";
     };
   in
-    nixpkgs.runCommand "ihaskell-kernel" {} ''
+    runCommand "ihaskell-kernel" {} ''
       export kerneldir=$out/kernels/haskell
       mkdir -p $kerneldir
       cp ${../html}/* $kerneldir
@@ -61,13 +67,13 @@ let
 
   # Separate Jupyter directory with the "labextensions" dir.
   # TODO: just copy this alongside the HTML in jupyterDir?
-  jupyterDirLabExtensions = nixpkgs.runCommand "ihaskell-labextension" {} ''
+  jupyterDirLabExtensions = runCommand "ihaskell-labextension" {} ''
     mkdir -p $out/labextensions/
     ln -s ${../jupyterlab-ihaskell/labextension} $out/labextensions/jupyterlab-ihaskell
   '';
 
   # Combine the paths in jupyterDirKernel and jupyterDirLabExtensions
-  ihaskellDataDir = nixpkgs.buildEnv {
+  ihaskellDataDir = buildEnv {
     name = "ihaskell-data-dir-" + compiler;
     paths = [ jupyterDirKernel jupyterDirLabExtensions ];
   };
@@ -75,15 +81,15 @@ let
 in
 
 # Final IHaskell environment:
-nixpkgs.buildEnv {
+buildEnv {
   name = "ihaskell-with-packages-" + compiler;
-  nativeBuildInputs = [ nixpkgs.makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
   paths = [ ihaskellEnv ] ++ extraEnvironmentBinaries;
   postBuild = ''
     for prg in $out/bin"/"*;do
       if [[ -f $prg && -x $prg ]]; then
         wrapProgram $prg \
-          --prefix PATH : "${nixpkgs.lib.makeBinPath ([ihaskellEnv] ++ (systemPackages nixpkgs))}" \
+          --prefix PATH : "${lib.makeBinPath ([ihaskellEnv] ++ (systemPackages pkgs))}" \
           --prefix JUPYTER_PATH : "${ihaskellDataDir}"
       fi
     done
@@ -93,7 +99,7 @@ nixpkgs.buildEnv {
     # statically linking against haskell libs reduces closure size at the expense
     # of startup/reload time, so we make it configurable
     ihaskellExe = if staticExecutable
-                  then nixpkgs.haskell.lib.justStaticExecutables haskellPackages.ihaskell
-                  else nixpkgs.haskell.lib.enableSharedExecutables haskellPackages.ihaskell;
+                  then haskell.lib.justStaticExecutables haskellPackages.ihaskell
+                  else haskell.lib.enableSharedExecutables haskellPackages.ihaskell;
   };
 }

@@ -17,9 +17,8 @@
       versions = let
         mkVersion = pkgsSrc: compiler: overlays: extraArgs: {
           name = compiler;
-          value = pkgsMaster.callPackage ./nix/release.nix ({
+          value = (import pkgsSrc { inherit system; overlays = [baseOverlay] ++ overlays; }).callPackage ./nix/release.nix ({
             inherit compiler;
-            nixpkgs = import pkgsSrc { inherit system; overlays = [baseOverlay] ++ overlays; };
           } // extraArgs);
         };
         in

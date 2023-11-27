@@ -1,18 +1,22 @@
-{ compiler
-, nixpkgs
+{ callPackage
+, haskell
+, lib
+
+, compiler
 , enableHlint
 }:
 
-let
-  ihaskell-src = nixpkgs.callPackage ./ihaskell-src.nix {};
+self: super:
 
-  displays = self:
-    let
-      mkDisplay = display: {
-        name = "ihaskell-${display}-" + compiler;
-        value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {};
-      };
-    in
+let
+  ihaskell-src = callPackage ./ihaskell-src.nix {};
+
+  displays = let
+    mkDisplay = display: {
+      name = "ihaskell-${display}-" + compiler;
+      value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {};
+    };
+  in
     builtins.listToAttrs (map mkDisplay [
       "aeson"
       "blaze"
@@ -31,15 +35,15 @@ let
 
 in
 
-self: super: {
+{
   ihaskell = let
-    baseIhaskell = nixpkgs.haskell.lib.overrideCabal (self.callCabal2nix "ihaskell" ihaskell-src {}) (_drv: {
+    baseIhaskell = haskell.lib.overrideCabal (self.callCabal2nix "ihaskell" ihaskell-src {}) (_drv: {
       preCheck = ''
         export HOME=$TMPDIR/home
         export PATH=$PWD/dist/build/ihaskell:$PATH
         export GHC_PACKAGE_PATH=$PWD/dist/package.conf.inplace/:$GHC_PACKAGE_PATH
       '';
-      configureFlags = (_drv.configureFlags or []) ++ (nixpkgs.lib.optionals (!enableHlint) [ "-f" "-use-hlint" ]);
+      configureFlags = (_drv.configureFlags or []) ++ (lib.optionals (!enableHlint) [ "-f" "-use-hlint" ]);
     });
   in
     if enableHlint
@@ -48,4 +52,4 @@ self: super: {
 
   ghc-parser     = self.callCabal2nix "ghc-parser" (builtins.path { path = ../ghc-parser; name = "ghc-parser-src"; }) {};
   ipython-kernel = self.callCabal2nix "ipython-kernel" (builtins.path { path = ../ipython-kernel; name = "ipython-kernel-src"; }) {};
-} // displays self
+} // displays
