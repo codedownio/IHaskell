@@ -26,7 +26,7 @@
         in
           pkgsMaster.lib.listToAttrs [
             (mkVersion nixpkgs23_05  "ghc810" []                               {})
-            (mkVersion nixpkgs23_05  "ghc90"  []                               {})
+            (mkVersion nixpkgs23_05  "ghc90"  [(import ./nix/overlay-9.0.nix)] {})
             (mkVersion nixpkgs23_05  "ghc92"  []                               {})
             (mkVersion nixpkgsMaster "ghc94"  [(import ./nix/overlay-9.4.nix)] {})
             (mkVersion nixpkgsMaster "ghc96"  [(import ./nix/overlay-9.6.nix)] {})

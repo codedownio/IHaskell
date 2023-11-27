@@ -16,6 +16,18 @@ sel: sup: {
           zeromq4-haskell = super.zeromq4-haskell.overrideAttrs (oldAttrs: {
             buildInputs = oldAttrs.buildInputs ++ [super.libsodium];
           });
+
+          # https://github.com/amcphail/plot/pull/23
+          plot = super.callCabal2nix "plot" (sup.fetchFromGitHub {
+            owner = "codedownio";
+            repo = "haskell-plot";
+            rev = "dfa26022b5815bcd6a5dd6c818fcd2c4d25c6d44";
+            sha256 = "1snk70l7q98cqflgaqf6l75g4hpcnf284flm9rsmk8kkzd5nnh5k";
+          }) {};
+
+          singletons-base = sup.haskell.lib.dontCheck (self.callHackage "singletons-base" "3.2" {});
+          singletons-th = self.callHackage "singletons-th" "3.2" {};
+          th-desugar = self.callHackage "th-desugar" "1.15" {};
         };
       };
     };
