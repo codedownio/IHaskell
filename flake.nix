@@ -14,6 +14,8 @@
       pkgs23_05 = import nixpkgs23_05 { inherit system; overlays = [baseOverlay]; };
       pkgsMaster = import nixpkgsMaster { inherit system; overlays = [baseOverlay]; };
 
+      jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
+
       versions = let
         mkVersion = pkgsSrc: compiler: overlays: extraArgs: {
           name = compiler;
@@ -28,10 +30,8 @@
             (mkVersion nixpkgs23_05  "ghc92"  []                               {})
             (mkVersion nixpkgsMaster "ghc94"  [(import ./nix/overlay-9.4.nix)] {})
             (mkVersion nixpkgsMaster "ghc96"  [(import ./nix/overlay-9.6.nix)] {})
-            (mkVersion nixpkgsMaster "ghc98"  [(import ./nix/overlay-9.6.nix)] { enableHlint = false; })
+            (mkVersion nixpkgsMaster "ghc98"  [(import ./nix/overlay-9.8.nix)] { enableHlint = false; })
           ];
-
-      jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
 
       envs = pkgsMaster.lib.mapAttrs' (version: releaseFn: {
         name = "ihaskell-env-" + version;
