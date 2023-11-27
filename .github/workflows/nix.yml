@@ -42,6 +42,13 @@ jobs:
         - ihaskell-env-ghc96
         - ihaskell-env-ghc98
 
+        - ihaskell-env-display-ghc810
+        - ihaskell-env-display-ghc90
+        - ihaskell-env-display-ghc92
+        - ihaskell-env-display-ghc94
+        - ihaskell-env-display-ghc96
+        - ihaskell-env-display-ghc98
+
     steps:
     - uses: actions/checkout@v3
 

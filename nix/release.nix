@@ -27,11 +27,13 @@ extraEnvironmentBinaries ? []
 }:
 
 let
+  ihaskellOverlay = callPackage ./ihaskell-overlay.nix { inherit compiler enableHlint; };
+
   # Haskell packages set with IHaskell packages added
   haskellPackages = haskell.packages."${compiler}".override (old: {
     overrides = lib.composeExtensions
       (old.overrides or (_: _: {}))
-      (callPackage ./ihaskell-overlay.nix { inherit compiler enableHlint; });
+      ihaskellOverlay;
   });
 
   # GHC with desired packages. This includes user-configured packages plus IHaskell itself, so
@@ -96,6 +98,8 @@ buildEnv {
   '';
 
   passthru = {
+    inherit haskellPackages;
+    inherit ihaskellOverlay;
     # statically linking against haskell libs reduces closure size at the expense
     # of startup/reload time, so we make it configurable
     ihaskellExe = if staticExecutable

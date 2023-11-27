@@ -33,16 +33,35 @@
             (mkVersion nixpkgsMaster "ghc98"  [(import ./nix/overlay-9.8.nix)] { enableHlint = false; })
           ];
 
-      envs = pkgsMaster.lib.mapAttrs' (version: releaseFn: {
-        name = "ihaskell-env-" + version;
+      envs' = prefix: packages: pkgsMaster.lib.mapAttrs' (version: releaseFn: {
+        name = prefix + version;
         value = (releaseFn {
           # Note: this can be changed to other Jupyter systems like jupyter-console
           extraEnvironmentBinaries = [ jupyterlab ];
           systemPackages = p: with p; [
             gnuplot # for the ihaskell-gnuplot runtime
           ];
+          inherit packages;
         });
       }) versions;
+
+      # Basic envs with Jupyterlab and IHaskell
+      envs = envs' "ihaskell-env-" (_: []);
+
+      # Envs with Jupyterlab, IHaskell, and all display packages
+      displayEnvs = envs' "ihaskell-env-display-" (p: with p; [
+        ihaskell-aeson
+        ihaskell-blaze
+        ihaskell-charts
+        ihaskell-diagrams
+        ihaskell-gnuplot
+        ihaskell-graphviz
+        ihaskell-hatex
+        ihaskell-juicypixels
+        ihaskell-magic
+        ihaskell-plot
+        ihaskell-widgets
+      ]);
 
       exes = pkgsMaster.lib.mapAttrs' (envName: env: {
         name = builtins.replaceStrings ["-env"] [""] envName;
@@ -59,9 +78,10 @@
       }) versions;
 
     in {
-      packages = envs // exes // devShells // rec  {
+      packages = envs // displayEnvs // exes // devShells // rec  {
         # For easily testing that everything builds
         allEnvs = pkgsMaster.linkFarm "ihaskell-envs" envs;
+        allDisplayEnvs = pkgsMaster.linkFarm "ihaskell-display-envs" displayEnvs;
         allExes = pkgsMaster.linkFarm "ihaskell-exes" exes;
         allDevShells = pkgsMaster.linkFarm "ihaskell-dev-shells" devShells;
 
