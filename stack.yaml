@@ -49,10 +49,9 @@ nix:
     - libthai
     - ncurses
     - pango
-    - pkg-config
     - pcre
     - pcre2
-    - pkgconfig
+    - pkg-config
     - util-linux
     - xorg.libXdmcp
     - zeromq
