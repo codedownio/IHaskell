@@ -51,6 +51,12 @@ sel: sup: {
           th-abstraction = self.callHackage "th-abstraction" "0.6.0.0" {};
           th-lift = self.callHackage "th-lift" "0.8.4" {};
           unliftio-core = sup.haskell.lib.doJailbreak super.unliftio-core;
+
+          # For display libs (in progress)
+          statestack = sup.haskell.lib.doJailbreak super.statestack;
+          # TODO: wait for nixpkgs master to update Hackage pin to have this diagrams-core version
+          diagrams-core = self.callHackage "diagrams-core" "1.5.1.1" {};
+          diagrams-lib = sup.haskell.lib.doJailbreak super.diagrams-lib;
         };
       };
     };
