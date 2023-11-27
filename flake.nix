@@ -69,23 +69,26 @@
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
         inherit jupyterlab;
 
-        # Full Jupyter environment with all Display modules (build is not incremental)
-        # result/bin/jupyter-lab
-        # ihaskell-env-display = versions.ghc810 {
-        #   packages = p: with p; [
-        #     ihaskell-aeson
-        #     ihaskell-blaze
-        #     ihaskell-charts
-        #     ihaskell-diagrams
-        #     ihaskell-gnuplot
-        #     ihaskell-graphviz
-        #     ihaskell-hatex
-        #     ihaskell-juicypixels
-        #     ihaskell-magic
-        #     ihaskell-plot
-        #     ihaskell-widgets
-        #   ];
-        # };
+        # Full Jupyter environment with all Display modules
+        ihaskell-env-display-ghc92 = versions.ghc92 {
+          extraEnvironmentBinaries = [ jupyterlab ];
+          systemPackages = p: with p; [
+            gnuplot # for the ihaskell-gnuplot runtime
+          ];
+          packages = p: with p; [
+            ihaskell-aeson
+            ihaskell-blaze
+            ihaskell-charts
+            ihaskell-diagrams
+            ihaskell-gnuplot
+            ihaskell-graphviz
+            ihaskell-hatex
+            ihaskell-juicypixels
+            ihaskell-magic
+            ihaskell-plot
+            ihaskell-widgets
+          ];
+        };
       };
 
       checks = pkgsMaster.lib.mapAttrs (envName: env:

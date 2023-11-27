@@ -13,25 +13,11 @@ let
 
   displays = let
     mkDisplay = display: {
-      name = "ihaskell-${display}-" + compiler;
-      value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/ihaskell-${display}" {};
+      name = display;
+      value = self.callCabal2nix display "${ihaskell-src}/ihaskell-display/${display}" {};
     };
   in
-    builtins.listToAttrs (map mkDisplay [
-      "aeson"
-      "blaze"
-      "charts"
-      "diagrams"
-      "gnuplot"
-      "graphviz"
-      "hatex"
-      "juicypixels"
-      "magic"
-      "plot"
-      "rlangqq"
-      "static-canvas"
-      "widgets"
-    ]);
+    builtins.listToAttrs (map mkDisplay (import ./displays.nix));
 
 in
 

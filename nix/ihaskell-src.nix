@@ -8,6 +8,7 @@ nix-filter {
     "Setup.hs"
     "ghc-parser"
     "html"
+    "ihaskell-display"
     "ihaskell.cabal"
     "ipython-kernel"
     "jupyterlab-ihaskell"
