@@ -4,16 +4,20 @@
 compiler
 # Imported Nixpkgs set.
 , nixpkgs
+# Whether to enable hlint.
+, enableHlint ? true
+}:
+
+{
 # Extra binaries to include in the final environment, like jupyter-lab or jupyter-console.
 # Will have their JUPYTER_PATH and PATH environment variables prefixed to tell them about the kernel.
-, extraEnvironmentBinaries ? []
+extraEnvironmentBinaries ? []
 # Haskell packages to include. First argument is an attrset of available packages.
 , packages ? (_: [])
 # RTS options passed when invoking IHaskell in the kernelspec.
 , rtsopts ? "-M3g -N2"
 , staticExecutable ? false
 , systemPackages ? (_: [])
-, enableHlint ? true
 }:
 
 let
