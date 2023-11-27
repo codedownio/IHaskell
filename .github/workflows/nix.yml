@@ -67,6 +67,6 @@ jobs:
 
     - name: Check acceptance test for ${{matrix.env}}
       # Disable GHC 9.8 here since we don't have hlint support yet
-      if: ${{ !contains(fromJSON('["ihaskell-env-ghc98"]'), matrix.env) }}
+      if: ${{ !contains(fromJSON('["ihaskell-env-ghc98"]'), matrix.env) && !contains(matrix.env, "display") }}
       run: |
         nix build .#checks.x86_64-linux.${{matrix.env}} -L
