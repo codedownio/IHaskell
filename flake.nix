@@ -49,19 +49,7 @@
       envs = envs' "ihaskell-env-" (_: []);
 
       # Envs with Jupyterlab, IHaskell, and all display packages
-      displayEnvs = envs' "ihaskell-env-display-" (p: with p; [
-        ihaskell-aeson
-        ihaskell-blaze
-        ihaskell-charts
-        ihaskell-diagrams
-        ihaskell-gnuplot
-        ihaskell-graphviz
-        ihaskell-hatex
-        ihaskell-juicypixels
-        ihaskell-magic
-        ihaskell-plot
-        ihaskell-widgets
-      ]);
+      displayEnvs = envs' "ihaskell-env-display-" (p: with p; map (n: getAttr n p) (import ./nix/displays.nix));
 
       exes = pkgsMaster.lib.mapAttrs' (envName: env: {
         name = builtins.replaceStrings ["-env"] [""] envName;
@@ -85,32 +73,13 @@
         allExes = pkgsMaster.linkFarm "ihaskell-exes" exes;
         allDevShells = pkgsMaster.linkFarm "ihaskell-dev-shells" devShells;
 
+        # For getting Nix paths in CI
         print-nixpkgs-stable = pkgsMaster.writeShellScriptBin "print-nixpkgs-stable.sh" "echo ${pkgs23_05.path}";
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
         inherit jupyterlab;
-
-        # Full Jupyter environment with all Display modules
-        ihaskell-env-display-ghc92 = versions.ghc92 {
-          extraEnvironmentBinaries = [ jupyterlab ];
-          systemPackages = p: with p; [
-            gnuplot # for the ihaskell-gnuplot runtime
-          ];
-          packages = p: with p; [
-            ihaskell-aeson
-            ihaskell-blaze
-            ihaskell-charts
-            ihaskell-diagrams
-            ihaskell-gnuplot
-            ihaskell-graphviz
-            ihaskell-hatex
-            ihaskell-juicypixels
-            ihaskell-magic
-            ihaskell-plot
-            ihaskell-widgets
-          ];
-        };
       };
 
+      # Run the acceptance tests on each env
       checks = pkgsMaster.lib.mapAttrs (envName: env:
         pkgsMaster.stdenv.mkDerivation {
           name = envName + "-check";
