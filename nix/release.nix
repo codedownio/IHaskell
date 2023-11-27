@@ -31,7 +31,7 @@ let
   haskellPackages = haskell.packages."${compiler}".override (old: {
     overrides = lib.composeExtensions
       (old.overrides or (_: _: {}))
-      (callPackage ./ihaskell_overlay.nix { inherit compiler enableHlint; });
+      (callPackage ./ihaskell-overlay.nix { inherit compiler enableHlint; });
   });
 
   # GHC with desired packages. This includes user-configured packages plus IHaskell itself, so
