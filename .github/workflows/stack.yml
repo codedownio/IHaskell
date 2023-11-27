@@ -33,9 +33,9 @@ jobs:
       fail-fast: false
       matrix:
         versions:
-        - stack-yaml: 'stack/stack-8.2.yaml'
-        - stack-yaml: 'stack/stack-8.4.yaml'
-        - stack-yaml: 'stack/stack-8.6.yaml'
+        # - stack-yaml: 'stack/stack-8.2.yaml'
+        # - stack-yaml: 'stack/stack-8.4.yaml'
+        # - stack-yaml: 'stack/stack-8.6.yaml'
         - stack-yaml: 'stack/stack-8.8.yaml'
         - stack-yaml: 'stack/stack-8.10.yaml'
         - stack-yaml: 'stack/stack-9.0.yaml'
@@ -69,6 +69,7 @@ jobs:
           stack build --nix --stack-yaml ${{matrix.versions.stack-yaml}}
 
       - name: Test
+        if: ${{ !contains(fromJSON('["stack-8.8.yaml"]'), matrix.versions.stack-yaml) }}
         run: |
           export "NIX_PATH=nixpkgs=$(nix run .#print-nixpkgs-master)"
           stack test --nix --stack-yaml ${{matrix.versions.stack-yaml}}

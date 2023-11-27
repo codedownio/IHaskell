@@ -26,8 +26,6 @@ ghc-options:
 extra-deps:
 - Chart-cairo-1.9.3
 
-allow-newer: true
-
 nix:
   packages:
   - blas
