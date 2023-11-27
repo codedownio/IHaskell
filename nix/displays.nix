@@ -9,7 +9,7 @@
   "ihaskell-juicypixels"
   "ihaskell-magic"
   "ihaskell-plot"
-  "ihaskell-rlangqq"
-  "ihaskell-static-canvas"
+  # "ihaskell-rlangqq"
+  # "ihaskell-static-canvas"
   "ihaskell-widgets"
 ]

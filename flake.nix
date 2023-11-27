@@ -49,7 +49,7 @@
       envs = envs' "ihaskell-env-" (_: []);
 
       # Envs with Jupyterlab, IHaskell, and all display packages
-      displayEnvs = envs' "ihaskell-env-display-" (p: with p; map (n: getAttr n p) (import ./nix/displays.nix));
+      displayEnvs = envs' "ihaskell-env-display-" (p: with p; map (n: builtins.getAttr n p) (import ./nix/displays.nix));
 
       exes = pkgsMaster.lib.mapAttrs' (envName: env: {
         name = builtins.replaceStrings ["-env"] [""] envName;
