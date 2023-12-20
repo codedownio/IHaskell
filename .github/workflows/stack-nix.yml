@@ -1,6 +1,7 @@
 name: Stack (--nix)
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
     - 'demo/**'
