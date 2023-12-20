@@ -32,7 +32,11 @@
         };
         in
           pkgsMaster.lib.listToAttrs [
-            (mkVersion nixpkgs25_05  "ghc98"  [(import ./nix/overlay-9.8.nix)]  {})
+            (mkVersion nixpkgs25_05  "ghc90"  [(import ./nix/overlay-9.0.nix)]  {})
+            (mkVersion nixpkgs25_05  "ghc92"  [(import ./nix/overlay-9.2.nix)]  {})
+            (mkVersion nixpkgs25_05  "ghc94"  [(import ./nix/overlay-9.4.nix)]  {})
+            (mkVersion nixpkgsMaster "ghc96"  [(import ./nix/overlay-9.6.nix)]  {})
+            (mkVersion nixpkgsMaster "ghc98"  [(import ./nix/overlay-9.8.nix)]  {})
             (mkVersion nixpkgsMaster "ghc910" [(import ./nix/overlay-9.10.nix)] {})
             (mkVersion nixpkgsMaster "ghc912" [(import ./nix/overlay-9.12.nix)] {})
           ];
