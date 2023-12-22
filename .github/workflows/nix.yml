@@ -34,33 +34,23 @@ on:
 jobs:
   build:
     if: (github.event_name != 'pull_request' && ! github.event.pull_request.head.repo.fork) || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork)
-    name: "${{matrix.env.name}} (Cachix: ${{matrix.env.cachix}})"
+    name: "${{matrix.env.name}}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         env:
         - name: ihaskell-env-ghc90
-          cachix: false
         - name: ihaskell-env-ghc92
-          cachix: false
         - name: ihaskell-env-ghc94
-          cachix: true
         - name: ihaskell-env-ghc96
-          cachix: true
         - name: ihaskell-env-ghc98
-          cachix: true
 
         - name: ihaskell-env-display-ghc90
-          cachix: false
         - name: ihaskell-env-display-ghc92
-          cachix: false
         - name: ihaskell-env-display-ghc94
-          cachix: true
         - name: ihaskell-env-display-ghc96
-          cachix: true
         - name: ihaskell-env-display-ghc98
-          cachix: true
 
     steps:
     - uses: actions/checkout@v3
@@ -69,17 +59,9 @@ jobs:
       with:
         install_url: https://releases.nixos.org/nix/nix-2.19.2/install
 
-    # Cache with either Cachix or the magic Nix cache, depending on the matrix.
-    # The latter uses only GitHub Actions storage.
-    - uses: cachix/cachix-action@v12
-      if: ${{ matrix.env.cachix }}
-      with:
-        name: ihaskell
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
     - uses: DeterminateSystems/magic-nix-cache-action@main
-      if: ${{ !matrix.env.cachix }}
 
-    - name: "Build environment ${{matrix.env.name}} (Cachix: ${{matrix.env.cachix}})"
+    - name: "Build environment ${{matrix.env.name}}"
       run: |
         nix build .#${{matrix.env.name}}
 
