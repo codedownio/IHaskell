@@ -1,10 +1,13 @@
-{-# language NoImplicitPrelude, DoAndIfThenElse, OverloadedStrings, ExtendedDefaultRules #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DoAndIfThenElse #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Description : All message type definitions.
 module IHaskell.Types (
@@ -45,7 +48,6 @@ module IHaskell.Types (
 import           IHaskellPrelude
 
 import           Data.Aeson (ToJSON (..), Value, (.=), object, Value(String))
-import           Data.Function (on)
 import           Data.Text (pack)
 import           Data.Binary
 import           GHC.Generics

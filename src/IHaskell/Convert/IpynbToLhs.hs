@@ -1,12 +1,13 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module IHaskell.Convert.IpynbToLhs (ipynbToLhs) where
 
-import           IHaskellPrelude
-import qualified Data.Text.Lazy as LT
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.Lazy as LT
+import           IHaskellPrelude
 
 import           Data.Aeson (decode, Object, Value(Array, Object, String))
 import           Data.Vector (Vector)
@@ -45,12 +46,11 @@ toStr _ = Nothing
 -- | @convCell sty cell@ converts a single cell in JSON into text suitable for the type of lhs file
 -- described by the @sty@
 convCell :: LhsStyle LT.Text -> Object -> LT.Text
-convCell _sty object
+convCell sty object
   | Just (String "markdown") <- lookup "cell_type" object,
     Just (Array xs) <- lookup "source" object,
     ~(Just s) <- concatWithPrefix "" xs
   = s
-convCell sty object
   | Just (String "code") <- lookup "cell_type" object,
     Just (Array a) <- lookup "source" object,
     Just (Array o) <- lookup "outputs" object,
@@ -58,7 +58,7 @@ convCell sty object
     o2 <- fromMaybe mempty (convOutputs sty o)
   = "\n" <>
     lhsBeginCode sty <> i <> lhsEndCode sty <> "\n" <> o2 <> "\n"
-convCell _ _ = "IHaskell.Convert.convCell: unknown cell"
+  | otherwise = "IHaskell.Convert.convCell: unknown cell"
 
 convOutputs :: LhsStyle LT.Text
             -> Vector Value -- ^ JSON array of output lines containing text or markup

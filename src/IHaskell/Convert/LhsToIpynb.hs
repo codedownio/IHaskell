@@ -3,10 +3,9 @@
 
 module IHaskell.Convert.LhsToIpynb (lhsToIpynb) where
 
-import           IHaskellPrelude
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.Lazy as LT
+import           IHaskellPrelude
 
 import           Data.Aeson ((.=), encode, object, Value(Array, Bool, Number, String, Null))
 import           Data.Char (isSpace)
@@ -16,9 +15,9 @@ import qualified Data.List as List
 import           IHaskell.Flags (LhsStyle(LhsStyle))
 
 #if MIN_VERSION_aeson(2,0,0)
-import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.Aeson.Key as Key
 #else
+import qualified Data.Text as T
 #endif
 
 lhsToIpynb :: LhsStyle LText -> FilePath -> FilePath -> IO ()
