@@ -31,25 +31,4 @@ extra-deps:
 allow-newer: true
 
 nix:
-  packages:
-  - blas
-  - cairo
-  - expat
-  - file
-  - fribidi
-  - gcc
-  - gfortran.cc.lib
-  - libdatrie
-  - liblapack
-  - libselinux
-  - libsepol
-  - libthai
-  - ncurses
-  - pango
-  - pcre
-  - pcre2.dev
-  - pkg-config
-  - util-linux.dev
-  - xorg.libXdmcp
-  - zeromq
-  - zlib
+  pure: false

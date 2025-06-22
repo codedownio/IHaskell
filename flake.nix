@@ -104,6 +104,30 @@
 
       defaultPackage = self.packages.${system}.ihaskell-env-ghc98;
 
-      devShell = self.packages.${system}.ihaskell-dev-ghc98;
+      # devShell = self.packages.${system}.ihaskell-dev-ghc98;
+
+      devShells = {
+        default = pkgsMaster.mkShell {
+          buildInputs = with pkgsMaster; [
+            glib
+            libsodium
+            libsysprof-capture
+            pcre2
+            pkg-config
+            zeromq
+
+            cairo
+            expat
+            fribidi
+            libdatrie
+            libselinux
+            libsepol
+            libthai
+            pango
+            util-linux
+            xorg.libXdmcp
+          ];
+        };
+      };
     });
 }
