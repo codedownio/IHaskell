@@ -182,6 +182,7 @@ Test-Suite hspec
         aeson,
         base,
         ghc,
+        ghc-paths,
         transformers,
         directory,
         text,
