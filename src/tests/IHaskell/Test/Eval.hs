@@ -13,8 +13,6 @@ import           System.Directory (getTemporaryDirectory, setCurrentDirectory)
 
 import           Text.RawString.QQ (r)
 
-import qualified GHC.Paths
-
 import           Test.Hspec
 
 import           IHaskell.Eval.Evaluate (interpret, evaluate)
@@ -22,8 +20,8 @@ import           IHaskell.Test.Util (strip)
 import           IHaskell.Types (Display(..), DisplayData(..), EvaluationResult(..), KernelState(..),
                                  LintStatus(..), MimeType(..), defaultKernelState, extractPlain)
 
-eval :: String -> IO ([Display], String)
-eval string = do
+eval :: FilePath -> String -> IO ([Display], String)
+eval ghcLibPath string = do
   outputAccum <- newIORef []
   pagerAccum <- newIORef []
   let publish evalResult _ =
@@ -36,7 +34,7 @@ eval string = do
 
   getTemporaryDirectory >>= setCurrentDirectory
   let state = defaultKernelState { getLintStatus = LintOff }
-  _ <- interpret GHC.Paths.libdir False False $ const $
+  _ <- interpret ghcLibPath False False $ const $
         IHaskell.Eval.Evaluate.evaluate state string publish noWidgetHandling
   out <- readIORef outputAccum
   pagerout <- readIORef pagerAccum

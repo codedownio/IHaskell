@@ -29,7 +29,6 @@ import           Data.Text.Lazy.Builder (toLazyText)
 
 import qualified Paths_ihaskell as Paths
 
-import qualified GHC.Paths
 import           IHaskell.Types
 
 import           StringUtils (replace, split)
@@ -53,7 +52,7 @@ data KernelSpecOptions =
 
 defaultKernelSpecOptions :: KernelSpecOptions
 defaultKernelSpecOptions = KernelSpecOptions
-  { kernelSpecGhcLibdir = GHC.Paths.libdir
+  { kernelSpecGhcLibdir = ""
   , kernelSpecRTSOptions = ["-M3g", "-N2"]  -- Memory cap 3 GiB,
                                             -- multithreading on two processors.
   , kernelSpecDebug = False

@@ -90,7 +90,6 @@ import           Packages
 import qualified ErrUtils
 #endif
 
-import qualified GHC.Paths
 import           GHC hiding (Stmt, TypeSig)
 
 import           IHaskell.CSS (ihaskellCSS)
@@ -188,12 +187,12 @@ hiddenPackageNames :: Set.Set String
 hiddenPackageNames = Set.fromList ["ghc-lib", "ghc-lib-parser"]
 
 -- | Interpreting function for testing.
-testInterpret :: Interpreter a -> IO a
-testInterpret v = interpret GHC.Paths.libdir False False (const v)
+testInterpret :: FilePath -> Interpreter a -> IO a
+testInterpret ghcLibDir v = interpret ghcLibDir False False (const v)
 
 -- | Evaluation function for testing.
-testEvaluate :: String -> IO ()
-testEvaluate str = void $ testInterpret $
+testEvaluate :: FilePath -> String -> IO ()
+testEvaluate ghcLibDir str = void $ testInterpret ghcLibDir $
   evaluate defaultKernelState str (\_ _ -> return ()) (\state _ -> return state)
 
 -- | Run an interpreting action. This is effectively runGhc with initialization
