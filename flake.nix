@@ -26,7 +26,7 @@
       versions = let
         mkVersion = pkgsSrc: compiler: overlays: extraArgs: {
           name = compiler;
-          value = (import pkgsSrc { inherit system; overlays = [baseOverlay] ++ overlays; }).callPackage ./nix/release.nix ({
+          value = (import pkgsSrc { inherit system; overlays = [baseOverlay] ++ overlays; }).pkgsCross.musl64.callPackage ./nix/release.nix ({
             inherit compiler;
           } // extraArgs);
         };
@@ -109,23 +109,27 @@
       devShells = {
         default = pkgsMaster.mkShell {
           buildInputs = with pkgsMaster; [
-            glib
-            libsodium
-            libsysprof-capture
-            pcre2
-            pkg-config
-            zeromq
-
+            blas
             cairo
             expat
+            file
             fribidi
+            glib
+            gmp
+            lapack
             libdatrie
             libselinux
             libsepol
+            libsodium
+            libsysprof-capture
             libthai
+            ncurses
             pango
+            pcre2
+            pkg-config
             util-linux
             xorg.libXdmcp
+            zeromq
           ];
         };
       };
