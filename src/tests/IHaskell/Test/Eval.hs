@@ -21,7 +21,7 @@ import           IHaskell.Types (Display(..), DisplayData(..), EvaluationResult(
                                  LintStatus(..), MimeType(..), defaultKernelState, extractPlain)
 
 eval :: FilePath -> String -> IO ([Display], String)
-eval ghcLibPath string = do
+eval ghcLibDir string = do
   outputAccum <- newIORef []
   pagerAccum <- newIORef []
   let publish evalResult _ =
@@ -34,21 +34,21 @@ eval ghcLibPath string = do
 
   getTemporaryDirectory >>= setCurrentDirectory
   let state = defaultKernelState { getLintStatus = LintOff }
-  _ <- interpret ghcLibPath False False $ const $
+  _ <- interpret ghcLibDir False False $ const $
         IHaskell.Eval.Evaluate.evaluate state string publish noWidgetHandling
   out <- readIORef outputAccum
   pagerout <- readIORef pagerAccum
   return (reverse out, unlines . map extractPlain . reverse $ pagerout)
 
-displayDatasBecome :: String -> [Display] -> IO ()
-displayDatasBecome command desired = do
-  (displays, _output) <- eval command
+displayDatasBecome :: FilePath -> String -> [Display] -> IO ()
+displayDatasBecome ghcLibDir command desired = do
+  (displays, _output) <- eval ghcLibDir command
   when (displays /= desired) $
     expectationFailure $ "Expected display datas to be " ++ show (encode desired)
                          ++ ". Got " ++ show (encode displays)
 
-becomes :: String -> [String] -> IO ()
-becomes string expected = evaluationComparing comparison string
+becomes' :: FilePath -> String -> [String] -> IO ()
+becomes' ghcLibDir string expected = evaluationComparing ghcLibDir comparison string
   where
     comparison :: ([Display], String) -> IO ()
     comparison (results, _pageOut) = do
@@ -60,25 +60,25 @@ becomes string expected = evaluationComparing comparison string
         ""  -> expectationFailure $ "No plain-text output in " ++ show result ++ "\nExpected: " ++ expect
         str -> str `shouldBe` expect
 
-evaluationComparing :: (([Display], String) -> IO b) -> String -> IO b
-evaluationComparing comparison string = do
+evaluationComparing :: FilePath -> (([Display], String) -> IO b) -> String -> IO b
+evaluationComparing ghcLibDir comparison string = do
   let indent (' ':x) = 1 + indent x
       indent _ = 0
       empty = null . strip
       stringLines = filter (not . empty) $ lines string
       minIndent = minimum (map indent stringLines)
       newString = unlines $ map (drop minIndent) stringLines
-  eval newString >>= comparison
+  eval ghcLibDir newString >>= comparison
 
 
-testEval :: Spec
-testEval =
+testEval :: FilePath -> Spec
+testEval ghcLibDir =
   describe "Code Evaluation" $ do
     it "gets rid of the test failure with Nix" $
       let
         throwAway :: String -> [String] -> IO ()
         throwAway string _ =
-          evaluationComparing (const $ shouldBe True True) string
+          evaluationComparing ghcLibDir (const $ shouldBe True True) string
       in throwAway "True" ["True"]
 
     it "evaluates expressions" $ do
@@ -159,21 +159,21 @@ testEval =
 
     it "evaluates :in directive" $ do
 #if MIN_VERSION_ghc(9,10,0)
-      displayDatasBecome ":in String" [
+      displayDatasBecome ghcLibDir ":in String" [
         ManyDisplay [Display [
                         DisplayData PlainText "type String :: *\ntype String = [Char]\n  \t-- Defined in \8216GHC.Internal.Base\8217"
                         , DisplayData MimeHtml "<div class=\"code CodeMirror cm-s-jupyter cm-s-ipython\"><span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">::</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">*</span><span class=\"cm-space\"><br /></span>\n<span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">=</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">[</span><span class=\"cm-variable-2\">Char</span><span class=\"cm-atom\">]</span><span class=\"cm-space\"><br />  \t</span><span class=\"cm-comment\">-- Defined in \8216GHC.Internal.Base\8217</span><span class=\"cm-space\"><br /></span></div>"
                         ]]
         ]
 #elif MIN_VERSION_ghc(8,10,0)
-      displayDatasBecome ":in String" [
+      displayDatasBecome ghcLibDir ":in String" [
         ManyDisplay [Display [
                         DisplayData PlainText "type String :: *\ntype String = [Char]\n  \t-- Defined in \8216GHC.Base\8217"
                         , DisplayData MimeHtml "<div class=\"code CodeMirror cm-s-jupyter cm-s-ipython\"><span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">::</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">*</span><span class=\"cm-space\"><br /></span>\n<span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">=</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">[</span><span class=\"cm-variable-2\">Char</span><span class=\"cm-atom\">]</span><span class=\"cm-space\"><br />  \t</span><span class=\"cm-comment\">-- Defined in \8216GHC.Base\8217</span><span class=\"cm-space\"><br /></span></div>"
                         ]]
         ]
 #else
-      displayDatasBecome ":in String" [
+      displayDatasBecome ghcLibDir ":in String" [
         ManyDisplay [Display [
                         DisplayData PlainText "type String = [Char] \t-- Defined in \8216GHC.Base\8217"
                         , DisplayData MimeHtml "<div class=\"code CodeMirror cm-s-jupyter cm-s-ipython\"><span class=\"cm-keyword\">type</span><span class=\"cm-space\"> </span><span class=\"cm-variable-2\">String</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">=</span><span class=\"cm-space\"> </span><span class=\"cm-atom\">[</span><span class=\"cm-variable-2\">Char</span><span class=\"cm-atom\">]</span><span class=\"cm-space\"> \t</span><span class=\"cm-comment\">-- Defined in \8216GHC.Base\8217</span><span class=\"cm-space\"><br /></span></div>"
@@ -194,3 +194,6 @@ testEval =
         identity :: forall a. a -> a
         identity a = a
       |] `becomes` []
+
+  where
+    becomes = becomes' ghcLibDir

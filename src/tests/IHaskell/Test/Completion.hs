@@ -52,19 +52,19 @@ completionEvent string = complete newString cursorloc
         Nothing  -> error "Expected cursor written as '*'."
         Just idx -> (replace "*" "" string, idx)
 
-completionEventInDirectory :: String -> IO (String, [String])
-completionEventInDirectory string = withHsDirectory $ const $ completionEvent string
+completionEventInDirectory :: FilePath -> String -> IO (String, [String])
+completionEventInDirectory ghcLibDir string = withHsDirectory ghcLibDir $ const $ completionEvent string
 
-shouldHaveCompletionsInDirectory :: String -> [String] -> IO ()
-shouldHaveCompletionsInDirectory string expected = do
-  (_, completions) <- completionEventInDirectory string
+shouldHaveCompletionsInDirectory :: FilePath -> String -> [String] -> IO ()
+shouldHaveCompletionsInDirectory ghcLibDir string expected = do
+  (_, completions) <- completionEventInDirectory ghcLibDir string
   expected `shouldBeAmong` completions
 
-completionHas :: String -> [String] -> IO ()
-completionHas string expected = do
-  (_, completions) <- ghc $ do
-                              initCompleter
-                              completionEvent string
+completionHas' :: FilePath -> String -> [String] -> IO ()
+completionHas' ghcLibDir string expected = do
+  (_, completions) <- ghc ghcLibDir $ do
+    initCompleter
+    completionEvent string
   expected `shouldBeAmong` completions
 
 initCompleter :: Interpreter ()
@@ -93,13 +93,13 @@ completes string expected = completionTarget newString cursorloc `shouldBe` expe
   where
     (newString, cursorloc) = readCompletePrompt string
 
-testCompletions :: Spec
-testCompletions = do
-  testIdentifierCompletion
-  testCommandCompletion
+testCompletions :: FilePath -> Spec
+testCompletions ghcLibDir = do
+  testIdentifierCompletion ghcLibDir
+  testCommandCompletion ghcLibDir
 
-testIdentifierCompletion :: Spec
-testIdentifierCompletion = describe "Completion" $ do
+testIdentifierCompletion :: FilePath -> Spec
+testIdentifierCompletion ghcLibDir = describe "Completion" $ do
     it "correctly gets the completion identifier without dots" $ do
       "hello*" `completes` ["hello"]
       "hello aa*bb goodbye" `completes` ["aa"]
@@ -127,8 +127,6 @@ testIdentifierCompletion = describe "Completion" $ do
       completionType ":load A" 7 ["A"] `shouldBe` HsFilePath ":load A" "A"
       completionType ":! cd " 6 [""] `shouldBe` FilePath ":! cd " ""
 
-
-
     it "properly completes identifiers" $ do
       "pri*" `completionHas` ["print"]
       "ma*" `completionHas` ["map"]
@@ -149,13 +147,15 @@ testIdentifierCompletion = describe "Completion" $ do
       "import Data.M*" `completionHas` ["Data.Maybe"]
       "import Prel*" `completionHas` ["Prelude"]
 
+  where
+    completionHas = completionHas' ghcLibDir
 
-testCommandCompletion :: Spec
-testCommandCompletion = describe "Completes commands" $ do
+testCommandCompletion :: FilePath -> Spec
+testCommandCompletion ghcLibDir = describe "Completes commands" $ do
   it "properly completes haskell file paths on :load directive" $ do
     let loading xs = ":load " ++ T.unpack (toTextIgnore xs)
         paths = map (T.unpack . toTextIgnore)
-        testInDirectory start comps = loading start `shouldHaveCompletionsInDirectory` paths comps
+        testInDirectory start comps = shouldHaveCompletionsInDirectory ghcLibDir (loading start) (paths comps)
     testInDirectory ("dir" </> "file*") ["dir" </> "file2.hs", "dir" </> "file2.lhs"]
     testInDirectory ("" </> "file1*") ["" </> "file1.hs", "" </> "file1.lhs"]
     testInDirectory ("" </> "file1*") ["" </> "file1.hs", "" </> "file1.lhs"]
@@ -163,13 +163,13 @@ testCommandCompletion = describe "Completes commands" $ do
     testInDirectory ("" </> "./*") ["./" </> "dir/", "./" </> "file1.hs", "./" </> "file1.lhs"]
 
   it "provides path completions on empty shell cmds " $
-    ":! cd *" `shouldHaveCompletionsInDirectory` map (T.unpack . toTextIgnore)
-                                                   [ "" </> "dir/"
-                                                   , "" </> "file1.hs"
-                                                   , "" </> "file1.lhs"
-                                                   ]
+    shouldHaveCompletionsInDirectory ghcLibDir ":! cd *" $ map (T.unpack . toTextIgnore) [
+      "" </> "dir/"
+      , "" </> "file1.hs"
+      , "" </> "file1.lhs"
+      ]
 
-  let withHsHome action = withHsDirectory $ \dirPath -> do
+  let withHsHome action = withHsDirectory ghcLibDir $ \dirPath -> do
         home <- shelly $ Shelly.get_env_text "HOME"
         setHomeEvent dirPath
         result <- action
@@ -202,17 +202,19 @@ testCommandCompletion = describe "Completes commands" $ do
   it "generates the correct matchingText on `:l ~/*` " $
     ":l ~/*" `shouldHaveMatchingText` ("~/" :: String)
 
-inDirectory :: [Shelly.FilePath] -- ^ directories relative to temporary directory
-            -> [Shelly.FilePath] -- ^ files relative to temporary directory
-            -> (Shelly.FilePath -> Interpreter a)
-            -> IO a
+inDirectory ::
+  FilePath
+  -> [Shelly.FilePath] -- ^ directories relative to temporary directory
+  -> [Shelly.FilePath] -- ^ files relative to temporary directory
+  -> (Shelly.FilePath -> Interpreter a)
+  -> IO a
 -- | Run an Interpreter action, but first make a temporary directory
 --   with some files and folder and cd to it.
-inDirectory dirs files action = shelly $ withTmpDir $ \dirPath -> do
+inDirectory ghcLibDir dirs files action = shelly $ withTmpDir $ \dirPath -> do
   cd dirPath
   mapM_ mkdir_p dirs
   mapM_ touchfile files
-  liftIO $ ghc $ wrap (T.unpack $ toTextIgnore dirPath) (action dirPath)
+  liftIO $ ghc ghcLibDir $ wrap (T.unpack $ toTextIgnore dirPath) (action dirPath)
   where
     cdEvent path = liftIO $ setCurrentDirectory path
     wrap :: String -> Interpreter a -> Interpreter a
@@ -224,13 +226,14 @@ inDirectory dirs files action = shelly $ withTmpDir $ \dirPath -> do
       cdEvent pwd    -- change back to the original directory
       return out
 
-withHsDirectory :: (Shelly.FilePath -> Interpreter a) -> IO a
-withHsDirectory = inDirectory [p "" </> p "dir", p "dir" </> p "dir1"]
-                    [ p "" </> p "file1.hs"
-                    , p "dir" </> p "file2.hs"
-                    , p "" </> p "file1.lhs"
-                    , p "dir" </> p "file2.lhs"
-                    ]
+withHsDirectory :: FilePath -> (Shelly.FilePath -> Interpreter a) -> IO a
+withHsDirectory ghcLibDir = inDirectory ghcLibDir
+  [p "" </> p "dir", p "dir" </> p "dir1"]
+  [ p "" </> p "file1.hs"
+  , p "dir" </> p "file2.hs"
+  , p "" </> p "file1.lhs"
+  , p "dir" </> p "file2.lhs"
+  ]
   where
     p :: T.Text -> T.Text
     p = id

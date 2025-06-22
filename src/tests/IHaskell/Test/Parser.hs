@@ -1,5 +1,6 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE CPP         #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module IHaskell.Test.Parser (testParser) where
 
 import           Prelude
@@ -16,25 +17,25 @@ import           IHaskell.Eval.Parser (parseString, getModuleName, unloc, layout
                                        CodeBlock(..), DirectiveType(..), StringLoc(..), PragmaType(..))
 import           IHaskell.Eval.ParseShell (parseShell)
 
-parses :: String -> IO [CodeBlock]
-parses str = do
-  flags <- ghc getSessionDynFlags
+parses' :: FilePath -> String -> IO [CodeBlock]
+parses' ghcLibDir str = do
+  flags <- ghc ghcLibDir getSessionDynFlags
   map unloc <$> evalStateT (parseString str) flags
 
 like :: (Show a, Eq a) => IO a -> a -> IO ()
 like parser desired = parser >>= (`shouldBe` desired)
 
-is :: String -> (String -> CodeBlock) -> IO ()
-is string blockType = do
-  flags <- ghc getSessionDynFlags
+is' :: FilePath -> String -> (String -> CodeBlock) -> IO ()
+is' ghcLibDir string blockType = do
+  flags <- ghc ghcLibDir getSessionDynFlags
   result <- evalStateT (parseString string) flags
   map unloc result `shouldBe` [blockType $ strip string]
 
-testParser :: Spec
-testParser = do
+testParser :: FilePath -> Spec
+testParser ghcLibDir = do
   testLayoutChunks
-  testModuleNames
-  testParseString
+  testModuleNames ghcLibDir
+  testParseString ghcLibDir
   testParseShell
 
 testLayoutChunks :: Spec
@@ -77,8 +78,8 @@ testLayoutChunks = describe "Layout Chunk" $ do
     parsesAsBlocks ["[q|\nx\n|] [q|x|]"]
 
 
-testModuleNames :: Spec
-testModuleNames = describe "Get Module Name" $ do
+testModuleNames :: FilePath -> Spec
+testModuleNames ghcLibDir = describe "Get Module Name" $ do
   it "parses simple module names" $
     "module A where\nx = 3" `named` ["A"]
   it "parses module names with dots" $
@@ -86,10 +87,10 @@ testModuleNames = describe "Get Module Name" $ do
   it "parses module names with exports" $
     "module A.B.C ( x ) where x = 3" `named` ["A", "B", "C"]
   it "errors when given unnamed modules" $ do
-    ghc (getModuleName "x = 3") `shouldThrow` anyException
+    ghc ghcLibDir (getModuleName "x = 3") `shouldThrow` anyException
   where
     named str result = do
-      res <- ghc $ getModuleName str
+      res <- ghc ghcLibDir $ getModuleName str
       res `shouldBe` result
 
 
@@ -112,8 +113,8 @@ testParseShell =
         Right xs' -> xs' `shouldBe` ys
         Left e    -> assertFailure $ "parseShell returned error: \n" ++ show e
 
-testParseString :: Spec
-testParseString = describe "Parser" $ do
+testParseString :: FilePath -> Spec
+testParseString ghcLibDir = describe "Parser" $ do
   it "parses empty strings" $
     parses "" `like` []
 
@@ -225,7 +226,7 @@ testParseString = describe "Parser" $ do
         Just 100))
     |] `is` Expression
   it "correctly locates parsed items" $ do
-    flags <- ghc getSessionDynFlags
+    flags <- ghc ghcLibDir getSessionDynFlags
     (flip evalStateT flags $ parseString
       [r|
         first
@@ -245,3 +246,6 @@ testParseString = describe "Parser" $ do
 #else
     msg = "Cannot parse data constructor in a data/newtype declaration: 3"
 #endif
+
+    is = is' ghcLibDir
+    parses = parses' ghcLibDir
