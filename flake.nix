@@ -54,7 +54,7 @@
       envs = mkEnvs "ihaskell-env-" (_: []);
 
       # Envs with Jupyterlab, IHaskell, and all display packages
-      displayEnvs = mkEnvs "ihaskell-env-display-" (p: with p; map (n: builtins.getAttr n p) (import ./nix/displays.nix));
+      displayEnvs = mkEnvs "ihaskell-env-display-" (p: map (n: builtins.getAttr n p) (import ./nix/displays.nix));
 
       # Executables only, pulled from passthru on the envs
       exes = pkgsMaster.lib.mapAttrs' (envName: env: {
@@ -72,7 +72,7 @@
       }) versions;
 
     in {
-      packages = envs // displayEnvs // exes // devShells // rec  {
+      packages = envs // displayEnvs // exes // devShells // {
         # For easily testing that everything builds
         allEnvs = pkgsMaster.linkFarm "ihaskell-envs" envs;
         allDisplayEnvs = pkgsMaster.linkFarm "ihaskell-display-envs" displayEnvs;
