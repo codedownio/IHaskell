@@ -47,15 +47,4 @@ ghc-options:
   # ihaskell-widgets: -Wall -Wpartial-fields -Werror
 
 nix:
-  packages:
-  - blas
-  - cairo
-  - file
-  - gcc
-  - gfortran.cc.lib
-  - liblapack
-  - ncurses
-  - pango
-  - pkg-config
-  - zeromq
-  - zlib
+  pure: false

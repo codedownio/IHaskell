@@ -1,4 +1,4 @@
-resolver: lts-22.10 # GHC 9.6.4
+resolver: lts-22.44 # GHC 9.6.7
 
 packages:
 - ..
@@ -24,34 +24,7 @@ ghc-options:
   # ihaskell-widgets: -Wall -Wpartial-fields -Werror
 
 extra-deps:
-# https://github.com/amcphail/plot/pull/23
-- git: https://github.com/codedownio/haskell-plot.git
-  commit: dfa26022b5815bcd6a5dd6c818fcd2c4d25c6d44
-
-allow-newer: true
+- plot-0.2.3.12
 
 nix:
-  packages:
-  - blas
-  - cairo
-  - expat
-  - file
-  - fribidi
-  - gcc
-  - gfortran.cc.lib
-  - libdatrie
-  - liblapack
-  - libselinux
-  - libsepol
-  - libsodium
-  - libsysprof-capture
-  - libthai
-  - ncurses
-  - pango
-  - pcre
-  - pcre2.dev
-  - pkg-config
-  - util-linux.dev
-  - xorg.libXdmcp
-  - zeromq
-  - zlib
+  pure: false

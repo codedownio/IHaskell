@@ -1,4 +1,4 @@
-resolver: lts-20.26 # GHC 9.2.8
+resolver: lts-23.25 # GHC 9.8.4
 
 packages:
 - ..
@@ -14,17 +14,17 @@ packages:
 - ../ihaskell-display/ihaskell-juicypixels
 - ../ihaskell-display/ihaskell-magic
 - ../ihaskell-display/ihaskell-plot
-- ../ihaskell-display/ihaskell-static-canvas
+# - ../ihaskell-display/ihaskell-static-canvas
 - ../ihaskell-display/ihaskell-widgets
-
-extra-deps:
-- static-canvas-0.2.0.3
 
 ghc-options:
   # Eventually we want "$locals": -Wall -Wpartial-fields -Werror
   # ghc-parser: -Wall -Wpartial-fields -Werror
   # ihaskell: -Wall -Wpartial-fields -Werror
   # ihaskell-widgets: -Wall -Wpartial-fields -Werror
+
+extra-deps:
+- plot-0.2.3.12
 
 nix:
   pure: false
