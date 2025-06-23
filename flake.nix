@@ -9,33 +9,74 @@
     inputs.flake-utils.follows = "flake-utils";
   };
   inputs.nix-filter.url = "github:numtide/nix-filter";
+  inputs.haskellNix.url = "github:input-output-hk/haskell.nix/master";
 
   nixConfig = {
     extra-substituters = [ "https://ihaskell.cachix.org" ];
     extra-trusted-public-keys = [ "ihaskell.cachix.org-1:WoIvex/Ft/++sjYW3ntqPUL3jDGXIKDpX60pC8d5VLM="];
   };
 
-  outputs = { self, nixpkgs25_05, nixpkgsMaster, flake-utils, hls, nix-filter, ... }:
+  outputs = { self, nixpkgs25_05, nixpkgsMaster, flake-utils, hls, nix-filter, haskellNix, ... }:
     flake-utils.lib.eachDefaultSystem (system: let
       baseOverlay = _self: _super: { inherit nix-filter; };
       pkgsMaster = import nixpkgsMaster { inherit system; overlays = [baseOverlay]; };
 
       jupyterlab = pkgsMaster.python3.withPackages (ps: [ ps.jupyterlab ps.notebook ]);
 
+      src = pkgsMaster.callPackage ./nix/ihaskell-src.nix {};
+
+      baseModules = {};
+
+      flakeStatic = pkgsSrc: compiler-nix-name:
+        let
+          pkgs = import pkgsSrc {
+            inherit system;
+            overlays = [baseOverlay haskellNix.overlay] ++ [
+              (self: super: {
+                hixProject = compiler-nix-name: src: extraModules:
+                  super.haskell-nix.hix.project {
+                    inherit src;
+                    evalSystem = system;
+                    inherit compiler-nix-name;
+                    modules = extraModules;
+                  };
+              })
+            ];
+            inherit (haskellNix) config;
+          };
+        in
+          (pkgs.pkgsCross.musl64.hixProject compiler-nix-name src [baseModules {
+            packages.ihaskell.components.exes.ihaskell.enableShared = false;
+            # packages.ihaskell.components.exes.ihaskell.configureFlags = [
+            #   ''--ghc-options="-pgml g++ -optl=-fuse-ld=gold -optl-Wl,--allow-multiple-definition -optl-Wl,--whole-archive -optl-Wl,-Bstatic -optl-Wl,-Bdynamic -optl-Wl,--no-whole-archive"''
+            # ];
+            packages.ihaskell.components.exes.ihaskell.libs = [];
+            packages.ihaskell.components.exes.ihaskell.build-tools = [pkgs.pkgsCross.musl64.gcc];
+          }]).flake {};
+
       # Map from GHC version to release function
       versions = let
-        mkVersion = pkgsSrc: compiler: overlays: extraArgs: {
-          name = compiler;
-          value = (import pkgsSrc { inherit system; overlays = [baseOverlay] ++ overlays; }).pkgsCross.musl64.callPackage ./nix/release.nix ({
-            inherit compiler;
-          } // extraArgs);
-        };
+        mkVersion = pkgsSrc: compiler: overlays: extraArgs: let
+          pkgs = import pkgsSrc {
+            inherit system;
+            overlays = [baseOverlay haskellNix.overlay] ++ overlays;
+            inherit (haskellNix) config;
+          };
         in
-          pkgsMaster.lib.listToAttrs [
-            (mkVersion nixpkgs25_05  "ghc98"  [(import ./nix/overlay-9.8.nix)]  {})
-            (mkVersion nixpkgsMaster "ghc910" [(import ./nix/overlay-9.10.nix)] {})
-            (mkVersion nixpkgsMaster "ghc912" [(import ./nix/overlay-9.12.nix)] {})
-          ];
+          {
+            name = compiler;
+            value = pkgs.callPackage ./nix/release.nix ({
+              inherit compiler;
+            } // extraArgs);
+          };
+      in
+        pkgsMaster.lib.listToAttrs [
+          (mkVersion nixpkgs25_05  "ghc98"  [(import ./nix/overlay-9.8.nix)]  {})
+          (mkVersion nixpkgsMaster "ghc910" [(import ./nix/overlay-9.10.nix)] {})
+          (mkVersion nixpkgsMaster "ghc912" [(import ./nix/overlay-9.12.nix)] {})
+
+
+        ];
 
       # Helper function for building environments with a given set of packages
       mkEnvs = prefix: packages: pkgsMaster.lib.mapAttrs' (version: releaseFn: {
@@ -82,13 +123,17 @@
         # To use in CI
         inherit jupyterlab;
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
+
+        foo98 = (flakeStatic nixpkgsMaster "ghc98").packages."ihaskell:exe:ihaskell";
+        foo910 = (flakeStatic nixpkgsMaster "ghc910").packages."ihaskell:exe:ihaskell";
+        foo912 = (flakeStatic nixpkgsMaster "ghc912").packages."ihaskell:exe:ihaskell";
       };
 
       # Run the acceptance tests on each env
       checks = pkgsMaster.lib.mapAttrs (envName: env:
         pkgsMaster.stdenv.mkDerivation {
           name = envName + "-check";
-          src = pkgsMaster.callPackage ./nix/ihaskell-src.nix {};
+          inherit src;
           nativeBuildInputs = with pkgsMaster; [jq bash];
           doCheck = true;
           checkPhase = ''
@@ -103,8 +148,6 @@
       ) envs;
 
       defaultPackage = self.packages.${system}.ihaskell-env-ghc98;
-
-      # devShell = self.packages.${system}.ihaskell-dev-ghc98;
 
       devShells = {
         default = pkgsMaster.mkShell {
