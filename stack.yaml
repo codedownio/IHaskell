@@ -1,4 +1,4 @@
-resolver: lts-22.10 # GHC 9.6.4
+resolver: lts-22.44 # GHC 9.6.7
 
 packages:
 - .
@@ -27,8 +27,6 @@ extra-deps:
 # https://github.com/amcphail/plot/pull/23
 - git: https://github.com/codedownio/haskell-plot.git
   commit: dfa26022b5815bcd6a5dd6c818fcd2c4d25c6d44
-
-allow-newer: true
 
 nix:
   pure: false

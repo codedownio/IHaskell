@@ -4,6 +4,10 @@
   inputs.nixpkgs25_05.url = "github:NixOS/nixpkgs/release-25.05";
   inputs.nixpkgsMaster.url = "github:NixOS/nixpkgs/master";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.gitignore = {
+    url = "github:hercules-ci/gitignore.nix";
+    inputs.nixpkgs.follows = "nixpkgsMaster";
+  };
   inputs.hls = {
     url = "github:haskell/haskell-language-server";
     inputs.flake-utils.follows = "flake-utils";
@@ -16,7 +20,7 @@
     extra-trusted-public-keys = [ "ihaskell.cachix.org-1:WoIvex/Ft/++sjYW3ntqPUL3jDGXIKDpX60pC8d5VLM="];
   };
 
-  outputs = { self, nixpkgs25_05, nixpkgsMaster, flake-utils, hls, nix-filter, haskellNix, ... }:
+  outputs = { self, nixpkgs25_05, nixpkgsMaster, flake-utils, gitignore, hls, nix-filter, haskellNix, ... }:
     flake-utils.lib.eachDefaultSystem (system: let
       baseOverlay = _self: _super: { inherit nix-filter; };
       pkgsMaster = import nixpkgsMaster { inherit system; overlays = [baseOverlay]; };
@@ -25,9 +29,34 @@
 
       src = pkgsMaster.callPackage ./nix/ihaskell-src.nix {};
 
-      baseModules = {};
+      srcWithStackYaml = stackYaml: let
+        baseSrc = pkgsMaster.lib.cleanSourceWith {
+          src = gitignore.lib.gitignoreSource ./.;
+          filter = name: type:
+            !(baseNameOf name == "flake.nix");
+        };
+      in
+        pkgsMaster.runCommand "src-with-${stackYaml}" {} ''
+          cp -r ${baseSrc} $out
+          chmod u+w $out
+          cd $out
+          rm stack.yaml
+          cp ${stackYaml} stack.yaml
+          cp ${stackYaml}.lock stack.yaml.lock
+          sed -i 's/\.\././g' stack.yaml
 
-      flakeStatic = pkgsSrc: compiler-nix-name:
+          echo "FINAL STACK.YAML:"
+          cat stack.yaml
+        '';
+
+      baseModules = {
+        packages.ihaskell.components.exes.ihaskell.libs = [
+          pkgsMaster.pkgsStatic.libsodium
+          (pkgsMaster.callPackage ./nix/static-zeromq.nix {})
+        ];
+      };
+
+      flakeStatic = pkgsSrc: compiler-nix-name: srcToUse: modules:
         let
           pkgs = import pkgsSrc {
             inherit system;
@@ -35,7 +64,8 @@
               (self: super: {
                 hixProject = compiler-nix-name: src: extraModules:
                   super.haskell-nix.hix.project {
-                    inherit src;
+                    projectFileName = "stack.yaml";
+                    src = srcToUse;
                     evalSystem = system;
                     inherit compiler-nix-name;
                     modules = extraModules;
@@ -52,7 +82,7 @@
             # ];
             packages.ihaskell.components.exes.ihaskell.libs = [];
             packages.ihaskell.components.exes.ihaskell.build-tools = [pkgs.pkgsCross.musl64.gcc];
-          }]).flake {};
+          } modules]).flake {};
 
       # Map from GHC version to release function
       versions = let
@@ -74,8 +104,6 @@
           (mkVersion nixpkgs25_05  "ghc98"  [(import ./nix/overlay-9.8.nix)]  {})
           (mkVersion nixpkgsMaster "ghc910" [(import ./nix/overlay-9.10.nix)] {})
           (mkVersion nixpkgsMaster "ghc912" [(import ./nix/overlay-9.12.nix)] {})
-
-
         ];
 
       # Helper function for building environments with a given set of packages
@@ -112,6 +140,12 @@
         };
       }) versions;
 
+      enableOsStringModule = {
+        # Needed since GHC 9.10
+        packages.unix.components.library.configureFlags = [''-f os-string''];
+        packages.directory.components.library.configureFlags = [''-f os-string''];
+      };
+
     in {
       packages = envs // displayEnvs // exes // devShells // {
         # For easily testing that everything builds
@@ -124,9 +158,10 @@
         inherit jupyterlab;
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
 
-        foo98 = (flakeStatic nixpkgsMaster "ghc98").packages."ihaskell:exe:ihaskell";
-        foo910 = (flakeStatic nixpkgsMaster "ghc910").packages."ihaskell:exe:ihaskell";
-        foo912 = (flakeStatic nixpkgsMaster "ghc912").packages."ihaskell:exe:ihaskell";
+        foo96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") {}).packages."ihaskell:exe:ihaskell";
+        foo98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") {}).packages."ihaskell:exe:ihaskell";
+        foo910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
+        foo912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
       };
 
       # Run the acceptance tests on each env

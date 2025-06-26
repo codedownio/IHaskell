@@ -14,6 +14,8 @@ nix-filter {
     "jupyterlab-ihaskell"
     "main"
     "src"
+    "stack.yaml"
+    "stack.yaml.lock"
     "test"
   ];
 }

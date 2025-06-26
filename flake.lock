@@ -151,6 +151,26 @@
         "type": "github"
       }
     },
+    "gitignore": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgsMaster"
+        ]
+      },
+      "locked": {
+        "lastModified": 1709087332,
+        "narHash": "sha256-HG2cCnktfHsKV0s4XW83gU3F57gaTljL9KNSuG6bnQs=",
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "rev": "637db329424fd7e46cf4185293b9cc8c88c95394",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "type": "github"
+      }
+    },
     "hackage": {
       "flake": false,
       "locked": {
@@ -675,11 +695,11 @@
     },
     "nixpkgsMaster": {
       "locked": {
-        "lastModified": 1749115402,
-        "narHash": "sha256-ubDKXeGy6RJ4nkJzvqU/Ulp+zW1MqH5kULga5N4plXI=",
+        "lastModified": 1750720303,
+        "narHash": "sha256-41svfw8S3McMQyhfnbT+WLKoia6aFVDiCLNOxd7tobs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "1f36324dfd37cf212dbd87651146225319cccc7a",
+        "rev": "1a3f591fa3c43fe4c6034c064e2783877c7069d1",
         "type": "github"
       },
       "original": {
@@ -709,6 +729,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "gitignore": "gitignore",
         "haskellNix": "haskellNix",
         "hls": "hls_2",
         "nix-filter": "nix-filter",

@@ -36,4 +36,6 @@ let
 
 in
 
-(devModifier devIHaskell).envFunc {withHoogle=true;}
+(devModifier devIHaskell).envFunc {
+  withHoogle=true;
+}
