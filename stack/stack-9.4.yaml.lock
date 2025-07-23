@@ -3,17 +3,10 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/topics/lock_files
 
-packages:
-- completed:
-    hackage: Chart-cairo-1.9.4@sha256:3c4ad206a1233a539a114c4dd015f45f8b156bbc7434fa0f9bff5b3b3f056fe9,986
-    pantry-tree:
-      sha256: 8d5c8ab58b0ba4d83724d2327b06e0345a72391757c1ea30fa165e8b1b6add2a
-      size: 238
-  original:
-    hackage: Chart-cairo-1.9.4
+packages: []
 snapshots:
 - completed:
-    sha256: 7d4b649cf368f9076d8aa049aa44efe58950971d105892734e9957b2a26a2186
-    size: 640060
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/21.yaml
-  original: lts-21.21
+    sha256: a81fb3877c4f9031e1325eb3935122e608d80715dc16b586eb11ddbff8671ecd
+    size: 640086
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/25.yaml
+  original: lts-21.25

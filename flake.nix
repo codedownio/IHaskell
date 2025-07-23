@@ -147,7 +147,7 @@
       };
 
     in {
-      packages = envs // displayEnvs // exes // devShells // {
+      packages = envs // displayEnvs // exes // devShells // rec {
         # For easily testing that everything builds
         allEnvs = pkgsMaster.linkFarm "ihaskell-envs" envs;
         allDisplayEnvs = pkgsMaster.linkFarm "ihaskell-display-envs" displayEnvs;
@@ -158,12 +158,23 @@
         inherit jupyterlab;
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
 
-        foo92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") {}).packages."ihaskell:exe:ihaskell";
-        foo94 = (flakeStatic nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") {}).packages."ihaskell:exe:ihaskell";
-        foo96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") {}).packages."ihaskell:exe:ihaskell";
-        foo98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") {}).packages."ihaskell:exe:ihaskell";
-        foo910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
-        foo912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
+        static92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") {}).packages."ihaskell:exe:ihaskell";
+        static94 = (flakeStatic nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") {}).packages."ihaskell:exe:ihaskell";
+        static96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") {}).packages."ihaskell:exe:ihaskell";
+        static98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") {}).packages."ihaskell:exe:ihaskell";
+        static910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
+        static912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
+
+        staticAll = pkgsMaster.runCommand "ihaskell-static-all" {} ''
+          mkdir -p $out/bin
+
+          # cp {static92}/bin/ihaskell $out/bin/ihaskell
+          # cp {static94}/bin/ihaskell $out/bin/ihaskell
+          cp ${static96}/bin/ihaskell $out/bin/ihaskell
+          cp ${static98}/bin/ihaskell $out/bin/ihaskell-98
+          cp ${static910}/bin/ihaskell $out/bin/ihaskell-910
+          # cp {static912}/bin/ihaskell $out/bin/ihaskell-912
+        '';
       };
 
       # Run the acceptance tests on each env
