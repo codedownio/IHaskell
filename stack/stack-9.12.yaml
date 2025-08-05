@@ -1,5 +1,4 @@
-resolver: nightly-2025-06-18 # GHC 9.10.2
-compiler: ghc-9.12.2
+resolver: nightly-2025-07-21
 
 packages:
 - ..
@@ -8,7 +7,7 @@ packages:
 - ../ihaskell-display/ihaskell-aeson
 - ../ihaskell-display/ihaskell-blaze
 - ../ihaskell-display/ihaskell-charts
-- ../ihaskell-display/ihaskell-diagrams
+# - ../ihaskell-display/ihaskell-diagrams
 - ../ihaskell-display/ihaskell-gnuplot
 - ../ihaskell-display/ihaskell-graphviz
 - ../ihaskell-display/ihaskell-hatex
@@ -25,7 +24,15 @@ ghc-options:
   # ihaskell-widgets: -Wall -Wpartial-fields -Werror
 
 extra-deps:
-- plot-0.2.3.12
+# - plot-0.2.3.12
+- cryptonite-0.30
+# - ghc-experimental-9.1201.0
+# - diagrams-1.4.2
+# - diagrams-contrib-1.4.6
+# - cubicbezier-0.6.0.7
+# - vector-space-0.19
+# - MemoTrie-0.6.11
+# - newtype-generics-0.6.2
 
 nix:
   pure: false

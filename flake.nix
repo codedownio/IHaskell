@@ -75,14 +75,14 @@
             inherit (haskellNix) config;
           };
         in
-          (pkgs.pkgsCross.musl64.hixProject compiler-nix-name src [baseModules {
+          (pkgs.pkgsCross.musl64.hixProject compiler-nix-name src ([baseModules] ++ [{
             packages.ihaskell.components.exes.ihaskell.enableShared = false;
             # packages.ihaskell.components.exes.ihaskell.configureFlags = [
             #   ''--ghc-options="-pgml g++ -optl=-fuse-ld=gold -optl-Wl,--allow-multiple-definition -optl-Wl,--whole-archive -optl-Wl,-Bstatic -optl-Wl,-Bdynamic -optl-Wl,--no-whole-archive"''
             # ];
             packages.ihaskell.components.exes.ihaskell.libs = [];
             packages.ihaskell.components.exes.ihaskell.build-tools = [pkgs.pkgsCross.musl64.gcc];
-          } modules]).flake {};
+          }] ++ modules)).flake {};
 
       # Map from GHC version to release function
       versions = let
@@ -144,6 +144,7 @@
         # Needed since GHC 9.10
         packages.unix.components.library.configureFlags = [''-f os-string''];
         packages.directory.components.library.configureFlags = [''-f os-string''];
+        packages.file-io.components.library.configureFlags = [''-f os-string''];
       };
 
     in {
@@ -158,12 +159,12 @@
         inherit jupyterlab;
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
 
-        static92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") {}).packages."ihaskell:exe:ihaskell";
-        static94 = (flakeStatic nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") {}).packages."ihaskell:exe:ihaskell";
-        static96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") {}).packages."ihaskell:exe:ihaskell";
-        static98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") {}).packages."ihaskell:exe:ihaskell";
-        static910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
-        static912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") enableOsStringModule).packages."ihaskell:exe:ihaskell";
+        static92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") []).packages."ihaskell:exe:ihaskell";
+        static94 = (flakeStatic nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") []).packages."ihaskell:exe:ihaskell";
+        static96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") []).packages."ihaskell:exe:ihaskell";
+        static98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") []).packages."ihaskell:exe:ihaskell";
+        static910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") [enableOsStringModule]).packages."ihaskell:exe:ihaskell";
+        static912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") [enableOsStringModule (import ./nix/ghc912-module.nix)]).packages."ihaskell:exe:ihaskell";
 
         staticAll = pkgsMaster.runCommand "ihaskell-static-all" {} ''
           mkdir -p $out/bin
@@ -173,7 +174,7 @@
           cp ${static96}/bin/ihaskell $out/bin/ihaskell
           cp ${static98}/bin/ihaskell $out/bin/ihaskell-98
           cp ${static910}/bin/ihaskell $out/bin/ihaskell-910
-          # cp {static912}/bin/ihaskell $out/bin/ihaskell-912
+          cp ${static912}/bin/ihaskell $out/bin/ihaskell-912
         '';
       };
 

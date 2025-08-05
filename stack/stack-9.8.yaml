@@ -1,4 +1,4 @@
-resolver: lts-23.25 # GHC 9.8.4
+resolver: lts-23.27 # GHC 9.8.4
 
 packages:
 - ..

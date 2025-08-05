@@ -5,15 +5,15 @@
 
 packages:
 - completed:
-    hackage: plot-0.2.3.12@sha256:95b44617403c743c95ff6e6847dfcddbac96355f593d9da3c7f92e1dd7fdf5f5,4419
+    hackage: cryptonite-0.30@sha256:12c85dea7be63e5ad90bcb487eb3846bf3c413347f94336fa1dede7b28f9936a,18301
     pantry-tree:
-      sha256: e3e6d51503b5b97480ff36164a829f1e70aa7d899fc6e651930d6a6ccab276de
-      size: 2704
+      sha256: df1cbe4cc40d569cc75ffed40bc5deac43cb085653980b42b9b6a5d4b745a30a
+      size: 23323
   original:
-    hackage: plot-0.2.3.12
+    hackage: cryptonite-0.30
 snapshots:
 - completed:
-    sha256: 53d74d0ba05207bf70f1e5dc4b673f5dd6fd69220817d30d756d207b9ae8d742
-    size: 712220
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/6/18.yaml
-  original: nightly-2025-06-18
+    sha256: e2ac9d5b121efaddcb47b2a7238830a99b1cec3c860a3d4898035aacb84a1d1e
+    size: 669633
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/7/21.yaml
+  original: nightly-2025-07-21
