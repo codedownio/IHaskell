@@ -41,12 +41,11 @@
           chmod u+w $out
           cd $out
           rm stack.yaml
+          rm stack.yaml.lock
           cp ${stackYaml} stack.yaml
           cp ${stackYaml}.lock stack.yaml.lock
           sed -i 's/\.\././g' stack.yaml
-
-          echo "FINAL STACK.YAML:"
-          cat stack.yaml
+          rm cabal.project
         '';
 
       baseModules = {
@@ -170,8 +169,8 @@
           mkdir -p $out/bin
 
           # cp {static92}/bin/ihaskell $out/bin/ihaskell
-          # cp {static94}/bin/ihaskell $out/bin/ihaskell
-          cp ${static96}/bin/ihaskell $out/bin/ihaskell
+          cp ${static94}/bin/ihaskell $out/bin/ihaskell-94
+          cp ${static96}/bin/ihaskell $out/bin/ihaskell-96
           cp ${static98}/bin/ihaskell $out/bin/ihaskell-98
           cp ${static910}/bin/ihaskell $out/bin/ihaskell-910
           cp ${static912}/bin/ihaskell $out/bin/ihaskell-912
