@@ -81,6 +81,10 @@
             # ];
             packages.ihaskell.components.exes.ihaskell.libs = [];
             packages.ihaskell.components.exes.ihaskell.build-tools = [pkgs.pkgsCross.musl64.gcc];
+
+            packages.ihaskell.components.exes.ihaskell.postInstall = ''
+              strip "$out/bin/ihaskell"
+            '';
           }] ++ modules)).flake {};
 
       # Map from GHC version to release function
