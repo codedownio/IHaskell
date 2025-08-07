@@ -1,0 +1,44 @@
+{
+    reinstallableLibGhc = true;
+    nonReinstallablePkgs = [
+        "array"
+        "base"
+        "binary"
+        "bytestring"
+        "containers"
+        "deepseq"
+        "directory"
+        "exceptions"
+        "filepath"
+        "file-io"
+        "ghc"
+        "ghc-bignum"
+        "ghc-boot"
+        "ghc-boot-th"
+        "ghc-internal"
+        "ghc-prim"
+        "hpc"
+        "integer-gmp"
+        "integer-simple"
+        "mtl"
+        "os-string"
+        "pretty"
+        "process"
+        "rts"
+        "semaphore-compat"
+        "stm"
+        "system-cxx-std-lib"
+        "template-haskell"
+        "terminfo"
+        "time"
+        "transformers"
+        "unix"
+    ];
+
+    packages.ihaskell.components.exes.ihaskell = {
+        configureFlags = [
+            "--ghc-option=-optl=-lstdc++"
+            "--ghc-option=-optl=-static"
+        ];
+    };
+}

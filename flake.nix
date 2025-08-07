@@ -158,7 +158,8 @@
         inherit jupyterlab;
         print-nixpkgs-master = pkgsMaster.writeShellScriptBin "print-nixpkgs-master.sh" "echo ${pkgsMaster.path}";
 
-        static92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") []).packages."ihaskell:exe:ihaskell";
+        static90 = (flakeStatic nixpkgsMaster "ghc902" (srcWithStackYaml "stack/stack-9.0.yaml") [(import ./nix/ghc90-module.nix)]).packages."ihaskell:exe:ihaskell";
+        static92 = (flakeStatic nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") [(import ./nix/ghc92-module.nix)]).packages."ihaskell:exe:ihaskell";
         static94 = (flakeStatic nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") []).packages."ihaskell:exe:ihaskell";
         static96 = (flakeStatic nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") []).packages."ihaskell:exe:ihaskell";
         static98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") []).packages."ihaskell:exe:ihaskell";
@@ -168,7 +169,8 @@
         staticAll = pkgsMaster.runCommand "ihaskell-static-all" {} ''
           mkdir -p $out/bin
 
-          # cp {static92}/bin/ihaskell $out/bin/ihaskell
+          cp ${static90}/bin/ihaskell $out/bin/ihaskell-90
+          cp ${static92}/bin/ihaskell $out/bin/ihaskell-92
           cp ${static94}/bin/ihaskell $out/bin/ihaskell-94
           cp ${static96}/bin/ihaskell $out/bin/ihaskell-96
           cp ${static98}/bin/ihaskell $out/bin/ihaskell-98
