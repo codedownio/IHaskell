@@ -1,0 +1,48 @@
+#! /usr/bin/env nix-shell
+#! nix-shell -i bash -p yq-go github-cli
+
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "$SCRIPTDIR/.."
+
+DRY_RUN=""
+FORCE=""
+
+for arg do
+    shift
+    [ "$arg" = "--dry-run" ] && DRY_RUN=t && continue
+    [ "$arg" = "--force" ] && FORCE=t && continue
+done
+
+ARTIFACTS=$(nix build .#staticAll --no-link --json | jq -r '.[0].outputs.out')
+echo "Got artifacts:"
+echo ""
+ls -lh "$ARTIFACTS/bin"
+
+VERSION="0.12.0.0"
+TAG=v"$VERSION"
+
+echo ""
+
+if [[ -n "$DRY_RUN" ]]; then
+  echo "Exiting early due to --dry-run"
+  exit 0
+fi
+
+echo "Tagging at $TAG"
+git tag "$TAG" -f
+
+echo "Pushing tags"
+if [[ -n "$FORCE" ]]; then
+  FORCE_ARG="-f"
+fi
+git push --tags $FORCE_ARG
+echo ""
+
+
+echo "Creating GitHub release"
+gh release create "$TAG" \
+  $ARTIFACTS/bin/* \
+  --title "$TAG" \
+  --notes ""

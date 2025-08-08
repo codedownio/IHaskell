@@ -170,16 +170,28 @@
         static910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") [enableOsStringModule]).packages."ihaskell:exe:ihaskell";
         static912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") [enableOsStringModule (import ./nix/ghc912-module.nix)]).packages."ihaskell:exe:ihaskell";
 
-        staticAll = pkgsMaster.runCommand "ihaskell-static-all" {} ''
+        staticAll = pkgsMaster.runCommand "ihaskell-static-all" { buildInputs = with pkgsMaster; [p7zip]; } ''
           mkdir -p $out/bin
 
-          cp ${static90}/bin/ihaskell $out/bin/ihaskell-90
-          cp ${static92}/bin/ihaskell $out/bin/ihaskell-92
-          cp ${static94}/bin/ihaskell $out/bin/ihaskell-94
-          cp ${static96}/bin/ihaskell $out/bin/ihaskell-96
-          cp ${static98}/bin/ihaskell $out/bin/ihaskell-98
-          cp ${static910}/bin/ihaskell $out/bin/ihaskell-910
-          cp ${static912}/bin/ihaskell $out/bin/ihaskell-912
+          cp ${static90}/bin/ihaskell $out/bin/ihaskell-${system}-ghc90
+          cp ${static92}/bin/ihaskell $out/bin/ihaskell-${system}-ghc92
+          cp ${static94}/bin/ihaskell $out/bin/ihaskell-${system}-ghc94
+          cp ${static96}/bin/ihaskell $out/bin/ihaskell-${system}-ghc96
+          cp ${static98}/bin/ihaskell $out/bin/ihaskell-${system}-ghc98
+          cp ${static910}/bin/ihaskell $out/bin/ihaskell-${system}-ghc910
+          cp ${static912}/bin/ihaskell $out/bin/ihaskell-${system}-ghc912
+
+          cd $out/bin
+          for file in ./*; do
+            echo "Zipping $file"
+
+            mkdir bin
+            mv $file bin/ihaskell
+
+            7z a -tzip -mx=7 $file.zip bin
+
+            rm -rf bin
+          done
         '';
       };
 
