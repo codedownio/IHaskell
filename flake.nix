@@ -87,6 +87,37 @@
             '';
           }] ++ modules)).flake {};
 
+      flake = pkgsSrc: compiler-nix-name: srcToUse: modules:
+        let
+          pkgs = import pkgsSrc {
+            inherit system;
+            overlays = [baseOverlay haskellNix.overlay] ++ [
+              (self: super: {
+                hixProject = compiler-nix-name: src: extraModules:
+                  super.haskell-nix.hix.project {
+                    projectFileName = "stack.yaml";
+                    src = srcToUse;
+                    evalSystem = system;
+                    inherit compiler-nix-name;
+                    modules = extraModules;
+                  };
+              })
+            ];
+            inherit (haskellNix) config;
+          };
+        in
+          (pkgs.hixProject compiler-nix-name src ([baseModules] ++ [{
+            packages.ihaskell.components.exes.ihaskell.libs = [];
+
+            packages.ihaskell.components.exes.ihaskell.configureFlags = [
+              ''--ghc-options="-pgml g++ -optl=-fuse-ld=gold -optl-Wl,--allow-multiple-definition -optl-Wl,--whole-archive -optl-Wl,-Bstatic -lzmq -lz -optl-Wl,-Bdynamic -optl-Wl,--no-whole-archive"''
+            ];
+
+            packages.ihaskell.components.exes.ihaskell.postInstall = ''
+              strip "$out/bin/ihaskell"
+            '';
+          }] ++ modules)).flake {};
+
       # Map from GHC version to release function
       versions = let
         mkVersion = pkgsSrc: compiler: overlays: extraArgs: let
@@ -169,6 +200,14 @@
         static98 = (flakeStatic nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") []).packages."ihaskell:exe:ihaskell";
         static910 = (flakeStatic nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") [enableOsStringModule]).packages."ihaskell:exe:ihaskell";
         static912 = (flakeStatic nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") [enableOsStringModule (import ./nix/ghc912-module.nix)]).packages."ihaskell:exe:ihaskell";
+
+        dynamic90 = (flake nixpkgsMaster "ghc902" (srcWithStackYaml "stack/stack-9.0.yaml") [(import ./nix/ghc90-module.nix)]).packages."ihaskell:exe:ihaskell";
+        dynamic92 = (flake nixpkgsMaster "ghc928" (srcWithStackYaml "stack/stack-9.2.yaml") [(import ./nix/ghc92-module.nix)]).packages."ihaskell:exe:ihaskell";
+        dynamic94 = (flake nixpkgsMaster "ghc948" (srcWithStackYaml "stack/stack-9.4.yaml") []).packages."ihaskell:exe:ihaskell";
+        dynamic96 = (flake nixpkgsMaster "ghc967" (srcWithStackYaml "stack/stack-9.6.yaml") []).packages."ihaskell:exe:ihaskell";
+        dynamic98 = (flake nixpkgsMaster "ghc984" (srcWithStackYaml "stack/stack-9.8.yaml") []).packages."ihaskell:exe:ihaskell";
+        dynamic910 = (flake nixpkgsMaster "ghc9102" (srcWithStackYaml "stack/stack-9.10.yaml") [enableOsStringModule]).packages."ihaskell:exe:ihaskell";
+        dynamic912 = (flake nixpkgsMaster "ghc9122" (srcWithStackYaml "stack/stack-9.12.yaml") [enableOsStringModule (import ./nix/ghc912-module.nix)]).packages."ihaskell:exe:ihaskell";
 
         staticAll = pkgsMaster.runCommand "ihaskell-static-all" { buildInputs = with pkgsMaster; [p7zip]; } ''
           mkdir -p $out/bin
