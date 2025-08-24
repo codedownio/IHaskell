@@ -29,3 +29,4 @@ dist-*/
 cabal.project.local
 cabal.config
 tsconfig.tsbuildinfo
+.direnv
