@@ -29,7 +29,16 @@ module Language.Haskell.GHC.Parser (
 import Data.List (intercalate, findIndex, isInfixOf)
 import Data.Char (isAlphaNum)
 
-#if MIN_VERSION_ghc(9,8,0)
+#if MIN_VERSION_ghc(9,14,0)
+import GHC.Driver.Config.Parser (initParserOpts)
+import GHC.Driver.Session (supportedLanguagesAndExtensions)
+import GHC.Parser.Errors.Types (PsMessage(..))
+import GHC.Platform (platformArchOS)
+import GHC.Types.Error (defaultDiagnosticOpts, getMessages, MsgEnvelope(..))
+import GHC.Utils.Error (diagnosticMessage, formatBulleted)
+import GHC.Utils.Logger (initLogger)
+import GHC.Utils.Outputable (defaultSDocContext, renderWithContext)
+#elif MIN_VERSION_ghc(9,8,0)
 import GHC.Driver.Config.Parser (initParserOpts)
 import GHC.Parser.Errors.Types (PsMessage(..))
 import GHC.Types.Error (defaultDiagnosticOpts, getMessages, MsgEnvelope(..))
@@ -215,12 +224,19 @@ runParser flags (Parser parser) str =
 parsePragmasIntoDynFlags :: DynFlags -> FilePath -> String -> IO (Maybe DynFlags)
 parsePragmasIntoDynFlags flags filepath str =
   catchErrors $ do
-#if MIN_VERSION_ghc(9,4,0)
+#if MIN_VERSION_ghc(9,14,0)
+    -- GHC 9.14 made getOptions take the supported pragmas and parseDynamicFilePragma take a Logger.
+    let supported = supportedLanguagesAndExtensions (platformArchOS (targetPlatform flags))
+    let opts = snd $ getOptions (initParserOpts flags) supported (stringToStringBuffer str) filepath
+    logger <- initLogger
+    (flags', _, _) <- parseDynamicFilePragma logger flags opts
+#elif MIN_VERSION_ghc(9,4,0)
     let opts = snd $ getOptions (initParserOpts flags) (stringToStringBuffer str) filepath
+    (flags', _, _) <- parseDynamicFilePragma flags opts
 #else
     let opts = getOptions flags (stringToStringBuffer str) filepath
-#endif
     (flags', _, _) <- parseDynamicFilePragma flags opts
+#endif
     return $ Just flags'
   where
     catchErrors :: IO (Maybe DynFlags) -> IO (Maybe DynFlags)

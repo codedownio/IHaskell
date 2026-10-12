@@ -497,7 +497,12 @@ removeImport modName = do
 
   where
     isImportOf :: ModuleName -> InteractiveImport -> Bool
+#if MIN_VERSION_ghc(9,14,0)
+    -- GHC 9.14 changed IIModule to carry a Module rather than a ModuleName.
+    isImportOf name (IIModule m) = name == moduleName m
+#else
     isImportOf name (IIModule mName) = name == mName
+#endif
     isImportOf name (IIDecl impDecl) = name == unLoc (ideclName impDecl)
 
 -- | Evaluate a series of declarations. Return all names which were bound by these declarations.
